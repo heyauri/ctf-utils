@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^9.0.0",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.1.1",
+    "lodash": "^4.17.21"
   }
 }
