@@ -14,14 +14,19 @@ A NodeJs based ctf-utils package.
 
 Detect/Decode/Encode all possible encrypt types of an input context.
 
-|  Types   | Detect | Decode | Encode |
-| :------: | :----: | :----: | :----: |
-|   OCT    |   ✅    |   ✅    |   ✅    |
-|  Base64  |   ✅    |   ✅    |   ✅    |
-| Unicode  |   ✅    |   ✅    |   ✅    |
-|   MD5    |   ✅    |        |   ✅    |
-| 当铺密码 |   ✅    |   ✅    |        |
-| 与佛论禅 |   ✅    |   ✅    |        |
+|   Types   | Detect | Decode | Encode |
+| :-------: | :----: | :----: | :----: |
+|    OCT    |   ✅    |   ✅    |   ✅    |
+|    HEX    |   ✅    |   ✅    |   ✅    |
+|  Base64   |   ✅    |   ✅    |   ✅    |
+|  Unicode  |   ✅    |   ✅    |   ✅    |
+|   Morse   |   ✅    |   ✅    |   ✅    |
+|   Bacon   |   ✅    |   ✅    |   ✅    |
+|    MD5    |   ✅    |        |   ✅    |
+| File Type |   ✅    |        |        |
+| 幂数密码  |   ✅    |   ✅    |        |
+| 当铺密码  |   ✅    |   ✅    |        |
+| 与佛论禅  |   ✅    |   ✅    |        |
 
 ```javascript
     const ctfUtils = require("ctf-utils");
