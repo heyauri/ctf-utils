@@ -24,6 +24,7 @@ Detect/Decode/Encode all possible encrypt types of an input context.
 |   Bacon   |   ✅    |   ✅    |   ✅    |
 |    MD5    |   ✅    |        |   ✅    |
 | File Type |   ✅    |        |        |
+| Poem Code |   ✅    |   ✅    |        |
 | 幂数密码  |   ✅    |   ✅    |        |
 | 当铺密码  |   ✅    |   ✅    |        |
 | 与佛论禅  |   ✅    |   ✅    |        |
