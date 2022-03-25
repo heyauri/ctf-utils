@@ -25,10 +25,12 @@ Detect/Decode/Encode all possible encrypt types of an input context.
 |    MD5    |   ✅    |        |   ✅    |
 | File Type |   ✅    |        |        |
 | Poem Code |   ✅    |   ✅    |        |
+|   ROT13   |        |   ✅    |   ✅    |
 | 幂数密码  |   ✅    |   ✅    |        |
 | 当铺密码  |   ✅    |   ✅    |        |
 | 与佛论禅  |   ✅    |   ✅    |        |
 
+Example:
 ```javascript
     const ctfUtils = require("ctf-utils");
 
