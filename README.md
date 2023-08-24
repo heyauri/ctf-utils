@@ -1,11 +1,25 @@
 # CTF-UTILS
 --- 
 
-A NodeJs based ctf-utils package.
+A NodeJs based ctf-utils package, which can be used to detect/decode/encode messages under some CTF related crypto/encoding manner.
 
 ## 1. Installation
-```cmd
-    npm install ctf-utils
+
+### As a package
+```bash
+npm install ctf-utils
+```
+then
+```javascript
+const ctfUtils = require("ctf-utils");
+```
+### As a cli
+```bash
+npm install -g ctf-utils
+```
+then
+```bash
+ctf-utils detect '636A56355279427363446C4A49454A71545342'
 ```
 
 ## 2. Usage
@@ -44,3 +58,7 @@ Example:
 ```
 
 The Unicode Encode including 3 types: "\uxxxx","&#xxxx","&#x****".
+
+## Warning
+
+If the `detect` function return `true` of any encrypt types, it only shows a possibility, not a certainty.
