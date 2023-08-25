@@ -39,9 +39,13 @@ Detect/Decode/Encode all possible encrypt types of an input context.
 |    MD5    |   ✅    |        |   ✅    |
 | File Type |   ✅    |        |        |
 | Poem Code |   ✅    |   ✅    |        |
+|   Caesar   |        |   ✅    |   ✅    |
+|   ROT5   |        |   ✅    |   ✅    |
 |   ROT13   |        |   ✅    |   ✅    |
+|   ROT47   |        |   ✅    |   ✅    |
 | 幂数密码  |   ✅    |   ✅    |        |
 | 当铺密码  |   ✅    |   ✅    |        |
+| 杂货铺密码  |   ✅    |   ✅    |        |
 | 与佛论禅  |   ✅    |   ✅    |        |
 
 Example:
