@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { Command } = require('commander');
-const lib = require("./lib");
+const lib = require("./dist");
 const program = new Command();
 const chalk = require('chalk');
 

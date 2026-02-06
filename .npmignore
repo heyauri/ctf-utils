@@ -6,3 +6,5 @@ examples
 files
 package-lock.json
 pnpm-lock.yaml
+src
+lib

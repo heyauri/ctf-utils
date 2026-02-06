@@ -1,68 +1,96 @@
 # CTF-UTILS
---- 
 
-A NodeJs based ctf-utils package, which can be used to detect/decode/encode messages under some CTF related crypto/encoding manner.
+A Node.js based CTF toolkit for detecting, decoding, and encoding messages using various cryptographic and encoding methods.
 
-## 1. Installation
+## Features
+
+- **40+ encoding/crypto methods** - Supports OCT, HEX, Base64, Unicode, Morse, Bacon, MD5, Caesar, ROT, and more
+- **TypeScript support** - Full type definitions included
+- **Dual usage** - Use as a library or CLI tool
+- **Zero dependencies** - Only core crypto and encoding modules
+
+## Installation
 
 ### As a package
+
 ```bash
 npm install ctf-utils
+# or
+pnpm add ctf-utils
 ```
-then
+
 ```javascript
 const ctfUtils = require("ctf-utils");
+
+// ES modules
+import * as ctfUtils from "ctf-utils";
 ```
-### As a cli
+
+### As a CLI
+
 ```bash
 npm install -g ctf-utils
-```
-then
-```bash
 ctf-utils detect '636A56355279427363446C4A49454A71545342'
 ```
 
-## 2. Usage
+## Quick Start
 
-### Detect | Decode | Encode
-
-Detect/Decode/Encode all possible encrypt types of an input context.
-
-|   Types   | Detect | Decode | Encode |
-| :-------: | :----: | :----: | :----: |
-|    OCT    |   ✅    |   ✅    |   ✅    |
-|    HEX    |   ✅    |   ✅    |   ✅    |
-|  Base64   |   ✅    |   ✅    |   ✅    |
-|  Unicode  |   ✅    |   ✅    |   ✅    |
-|   Morse   |   ✅    |   ✅    |   ✅    |
-|   Bacon   |   ✅    |   ✅    |   ✅    |
-|    MD5    |   ✅    |        |   ✅    |
-| File Type |   ✅    |        |        |
-| Poem Code |   ✅    |   ✅    |        |
-|   Caesar   |        |   ✅    |   ✅    |
-|   ROT5   |        |   ✅    |   ✅    |
-|   ROT13   |        |   ✅    |   ✅    |
-|   ROT47   |        |   ✅    |   ✅    |
-| 幂数密码  |   ✅    |   ✅    |        |
-| 当铺密码  |   ✅    |   ✅    |        |
-| 杂货铺密码  |   ✅    |   ✅    |        |
-| 与佛论禅  |   ✅    |   ✅    |        |
-
-Example:
 ```javascript
-    const ctfUtils = require("ctf-utils");
+const { detect, decode, encode, OCT, Morse, Affine } = require("ctf-utils");
 
-    // Detect
-    ctfUtils.detect.OCT("146 154 141 147");
-    // Out: True
+// Detect encoding type
+detect.OCT("146 154 141 147");     // true
+detect.Morse(".... . .-.. .-.. ---");  // true
 
-    // Decode
-    ctfUtils.decode.OCT("146 154 141 147");
-    // Out: flag
+// Decode
+decode.OCT("146 154 141 147");     // "flag"
+decode.Morse(".... . .-.. .-.. ---");  // "hello"
+
+// Encode
+encode.Base64("hello");            // "aGVsbG8="
+
+// Direct module access
+Affine.encode("hello", 5, 8);      // "xubbeg"
 ```
 
-The Unicode Encode including 3 types: "\uxxxx","&#xxxx","&#x****".
+## Supported Methods
+
+| Type | Detect | Decode | Encode |
+| :--- | :---: | :---: | :---: |
+| OCT | ✅ | ✅ | ✅ |
+| HEX | ✅ | ✅ | ✅ |
+| Base64 | ✅ | ✅ | ✅ |
+| Unicode | ✅ | ✅ | ✅ |
+| Morse | ✅ | ✅ | ✅ |
+| Bacon | ✅ | ✅ | ✅ |
+| MD5 | ✅ | | ✅ |
+| File Type | ✅ | | |
+| Poem | ✅ | ✅ | |
+| Caesar | | ✅ | ✅ |
+| ROT5/13/47 | | ✅ | ✅ |
+| Affine | | ✅ | ✅ |
+| Exponential | ✅ | ✅ | |
+| DangPu | ✅ | ✅ | |
+| YuFoLunChan | ✅ | ✅ | |
+| ZaHuoPu | ✅ | ✅ | |
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build (TypeScript src → dist)
+pnpm build
+
+# Type check
+pnpm tsc --noEmit
+```
 
 ## Warning
 
-If the `detect` function return `true` of any encrypt types, it only shows a possibility, not a certainty.
+The `detect` function indicates **possibility**, not certainty. A positive result means the input *could be* in that format.
+
+## License
+
+MIT
