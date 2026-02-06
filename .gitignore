@@ -6,5 +6,6 @@ files
 package-lock.json
 pnpm-lock.yaml
 dist
+_archive
 lib
 todo.md

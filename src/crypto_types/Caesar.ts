@@ -53,7 +53,10 @@ const de_Caesar = (input: string | Buffer, type: number | string = 13): string |
     return "Caesar type is invalid";
 };
 
+const en_Caesar = de_Caesar;
+
 export {
+    en_Caesar,
     de_Caesar,
     de_Caesar as decode,
     de_Caesar as encode
