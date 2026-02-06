@@ -19,4 +19,4 @@ const detectAll = (str: string): Record<string, boolean> => {
     return results;
 };
 
-export default { ...cryptoTypes, detect_dict, detectAll };
+export default { ...detect_dict, detectAll };

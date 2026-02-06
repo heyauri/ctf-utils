@@ -11,4 +11,4 @@ for (const curr in cryptoTypes) {
     }
 }
 
-export default { ...cryptoTypes, decode_dict };
+export default { ...decode_dict };
