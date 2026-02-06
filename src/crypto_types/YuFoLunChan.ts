@@ -36,7 +36,7 @@ const de_YuFoLunChan = (str: string): string => {
         mode: CryptoJS.mode.CBC, 
         padding: CryptoJS.pad.Pkcs7 
     });
-    return cryptor.toString("Utf16LE");
+    return cryptor.toString(CryptoJS.enc.Utf16LE);
 };
 
 const is_YuFoLunChan = (str: string): boolean => {
