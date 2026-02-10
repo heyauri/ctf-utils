@@ -9,13 +9,13 @@ const timer = setTimeout(() => {
 }, TIMEOUT_MS);
 
 const tests = [
-        { value: "0123 0123" },
-        { value: "0123 123" },
-        { value: "123 0123" }
+        { value: "Hello" },
+        { value: "World" },
+        { value: "Test" }
 ];
 
 async function runTests() {
-    console.log("【Exponential 测试】\n");
+    console.log("【Brainfuck 测试】\n");
 
     let passed = 0;
     let total = tests.length;
@@ -23,11 +23,12 @@ async function runTests() {
     for (const { value } of tests) {
         const ctf = new CTFUtils(value);
 
-        const isDetected = await ctf.detect.Exponential();
+        const encoded = await (await ctf.encode.Brainfuck()).val();
+        const isDetected = await ctf.detect.Brainfuck(encoded);
 
-        console.log(`  Exponential: "${value}" detect:${isDetected}`);
+        console.log(`  Brainfuck: "${value}" detect:${isDetected} encode:"${encoded.substring(0, 30)}..."`);
 
-        if (isDetected === true) {
+        if (isDetected === true && encoded !== undefined && encoded.length > 0) {
             passed++;
             console.log(`    ✅`);
         } else {

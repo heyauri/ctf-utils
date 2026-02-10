@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode, detect } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF{test}"];
+const TIMEOUT_MS = 5000;
 
-console.log("【Base64 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "CTF{test}" }
+];
 
-for (const original of tests) {
-    const encoded = encode.Base64(original);
-    const decoded = decode.Base64(encoded);
-    const isDetected = detect.Base64(encoded);
-    
-    console.log(`  Base64: "${original}" -> detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original && isDetected) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【Base64 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Base64()).val();
+        const isDetected = await ctf.detect.Base64();
+        const decoded = await (await ctf.decode.Base64()).val();
+
+        console.log(`  Base64: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

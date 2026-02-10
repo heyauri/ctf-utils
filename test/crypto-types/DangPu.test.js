@@ -1,25 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF"];
+const TIMEOUT_MS = 5000;
 
-console.log("【DangPu 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "Test" }
+];
 
-for (const original of tests) {
-    const encoded = encode.DangPu(original);
-    const decoded = decode.DangPu(encoded);
-    
-    console.log(`  DangPu: "${original}" -> encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【DangPu 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.DangPu()).val();
+        const isDetected = await ctf.detect.DangPu();
+        const decoded = await (await ctf.decode.DangPu()).val();
+
+        console.log(`  DangPu: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

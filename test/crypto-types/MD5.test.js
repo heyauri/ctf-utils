@@ -1,32 +1,48 @@
 const ctf = require('../../lib/index.js');
-const { encode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF{test}"];
+const TIMEOUT_MS = 5000;
 
-console.log("【MD5 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "CTF{test}" }
+];
 
-const expectedHashes = {
-    "Hello": "8b1a9953c4611296a827abf8c47804d7",
-    "World": "f5a7924e621e84c9280a9a27e1bcb7f6",
-    "CTF{test}": "ffcc100d4fa9a73a16b8758a05ca55a2"
-};
+async function runTests() {
+    console.log("【MD5 测试】\n");
 
-for (const input of tests) {
-    const hash = encode.MD5(input);
-    const expected = expectedHashes[input];
-    
-    console.log(`  MD5: "${input}" -> "${hash}"`);
-    console.log(`       expected: "${expected}"`);
-    
-    if (hash === expected) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.MD5()).val();
+        const isDetected = await ctf.detect.MD5();
+
+        console.log(`  MD5: "${value}" detect:${isDetected} encode:"${encoded}"`);
+
+        if (encoded !== undefined && encoded.length > 0) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

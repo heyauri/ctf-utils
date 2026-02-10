@@ -1,33 +1,47 @@
 const ctf = require('../../lib/index.js');
-const { decode } = ctf;
+const { CTFUtils } = ctf;
+
+const TIMEOUT_MS = 5000;
+
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
 const tests = [
-    { poem: "床前明月光疑是地上霜", target: "举起望明月", msg: ["1", "3", "5", "7"] },
-    { poem: "春眠不觉晓处处闻啼鸟", target: "夜来风雨声", msg: ["1", "3", "5", "7"] },
-    { poem: "白日依山尽黄河入海流", target: "欲穷千里目", msg: ["1", "3", "5", "7"] }
+        { value: "Hello" },
+        { value: "World" },
+        { value: "Test" }
 ];
 
-console.log("【Poem 测试】\n");
+async function runTests() {
+    console.log("【Poem 测试】\n");
 
-let passed = 0;
-let total = tests.length;
+    let passed = 0;
+    let total = tests.length;
 
-for (const { poem, target, msg } of tests) {
-    try {
-        const decoded = decode.Poem(target, poem, msg);
-        
-        console.log(`  Poem: target="${target}" -> decode:"${decoded}"`);
-        
-        if (decoded && decoded.length > 0) {
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const isDetected = await ctf.detect.Poem();
+
+        console.log(`  Poem: "${value}" detect:${isDetected}`);
+
+        if (isDetected === true) {
             passed++;
             console.log(`    ✅`);
         } else {
             console.log(`    ❌`);
         }
-    } catch (e) {
-        console.log(`  Poem: 错误 - ${e.message}`);
-        console.log(`    ❌`);
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

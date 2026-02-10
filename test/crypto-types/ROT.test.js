@@ -1,25 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["HELLO", "WORLD", "TEST123"];
+const TIMEOUT_MS = 5000;
 
-console.log("【ROT 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello", key: 13 },
+        { value: "World" },
+        { value: "URYYB" }
+];
 
-for (const original of tests) {
-    const encoded = encode.ROT(original);
-    const decoded = decode.ROT(encoded);
-    
-    console.log(`  ROT: "${original}" -> encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【ROT 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value, key } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.ROT(13)).val();
+
+        const decoded = await (await ctf.decode.ROT(13)).val();
+
+        console.log(`  ROT: "${value}" encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

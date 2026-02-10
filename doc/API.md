@@ -420,7 +420,48 @@ detect.MD5('5d41402abc4b2a76b9719d911017c592');  // true (32位十六进制)
 detect.MD5('hello');                              // false
 ```
 
-#### 22. 全部检测
+#### 22. BinaryFile 文件类型检测
+```javascript
+detect.BinaryFile(buf: Buffer | string, mode?: string): string[]
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| buf | Buffer \| string | 文件内容或十六进制字符串 |
+| mode | string | "fast": 仅检测文件头 (默认), "full": 全文件检测 |
+
+**示例：**
+```javascript
+const fs = require('fs');
+const buf = fs.readFileSync('image.png');
+detect.BinaryFile(buf);
+// ['png']
+
+detect.BinaryFile('89504E470D0A1A0A', 'fast');
+// ['png']
+```
+
+**支持的文件类型：**
+| 文件头 | 文件类型 |
+|--------|----------|
+| FFD8FF | jpg |
+| 89504E47 | png |
+| 47494638 | gif |
+| 49492A00 | tif |
+| 424D | bmp |
+| 504B0304 | zip / docx / xlsx |
+| 52617221 | rar |
+| 255044462D312E | pdf |
+| 57415645 | wav |
+| 41564920 | avi |
+| 000001BA | mpg |
+| 6D6F6F76 | mov |
+| 3026B2758E66CF11 | asf |
+| 4D546864 | mid |
+| 68746D6C3E | html |
+| 3C3F786D6C | xml |
+| 44656C69766572792D646174653A | eml |
+
+#### 23. 全部检测
 ```javascript
 detect.detectAll(str: string): object
 ```
@@ -761,6 +802,59 @@ decode.Poem(str: string): string
 decode.Poem(str);  // 根据藏头诗规则解密
 ```
 
+#### 26. DangPu 解码
+```javascript
+decode.DangPu(str: string): string
+```
+**DangPu 字典：**
+| 字符 | 数字 | 字符 | 数字 |
+|------|------|------|------|
+| 口、田 | 0 | 人、工 | 3、4 |
+| 由、中 | 1、2 | 大、王、夫、井、羊 | 5、6、7、8、9 |
+
+**示例：**
+```javascript
+decode.DangPu('由大工');  // '124'
+decode.DangPu('王夫井');  // '678'
+```
+
+#### 27. ZaHuoPu 解码
+```javascript
+decode.ZaHuoPu(str: string): string
+```
+**当铺贷字典：**
+| 字符 | 数字 | 字符 | 数字 |
+|------|------|------|------|
+| 丁不勾、示不小 | 1、2 | 皂不白、分不刀 | 7、8 |
+| 王不立、罪不非 | 3、4 | 馗不首、针不金 | 9、0 |
+| 吾不口、交不叉 | 5、6 | | |
+
+**备用字典：**
+| 字符 | 数字 | 字符 | 数字 |
+|------|------|------|------|
+| 平头、空工 | 1、2 | 皂底、分头 | 7、8 |
+| 横川、侧目 | 3、4 | 未丸、田心 | 9、0 |
+| 缺丑、断大 | 5、6 | | |
+
+**示例：**
+```javascript
+decode.ZaHuoPu('由工王');  // '124'
+decode.ZaHuoPu('兔子兔子乌龟兔子');  // 数字字符串
+```
+
+#### 28. YuFoLunChan 解码
+```javascript
+decode.YuFoLunChan(str: string): string
+```
+**描述：** 佛语轮禅编码是一种基于梵文字符的加密编码，结合 AES-256-CBC 加密。
+
+**特征：** 字符串末尾包含 5 个以上的梵文字符。
+
+**示例：**
+```javascript
+decode.YuFoLunChan('内容由加密');  // 解密后的明文
+```
+
 ---
 
 ## encode 方法
@@ -1002,6 +1096,18 @@ encode.MD5(str: string): string
 encode.MD5('Hello');  // '8b1a9953c4611296a827abf8c47804d7'
 ```
 
+#### 23. DangPu 编码
+```javascript
+encode.DangPu(str: string): string
+```
+**描述：** 将数字转换为汉字的编码方式。
+
+**示例：**
+```javascript
+encode.DangPu('124');  // '由大工'
+encode.DangPu('678');  // '大王井'
+```
+
 ---
 
 ## 示例代码
@@ -1114,3 +1220,179 @@ console.log(`还原: ${back1}`);
 4. **异常处理**：某些解码函数在输入无效时可能返回空字符串或原始输入
 
 5. **Buffer 支持**：部分函数支持 Buffer 类型的输入输出
+
+---
+
+## 测试指南
+
+### 运行测试
+
+项目包含完整的测试套件，用于验证所有编码/解码功能的正确性。
+
+#### 运行所有测试
+```bash
+node test/run-all-tests.js
+```
+
+#### 运行单个测试
+```bash
+node test/crypto-types/Base64.test.js
+```
+
+#### 测试超时设置
+每个测试都配置了 5000ms 超时保护，防止测试无限期挂起：
+```javascript
+const TIMEOUT_MS = 5000;
+
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
+```
+
+### 测试文件结构
+
+所有测试文件位于 `test/crypto-types/` 目录下，遵循以下命名规范：
+- `{CryptoType}.test.js` - 例如 `Base64.test.js`, `Caesar.test.js`
+
+#### 测试文件模板
+```javascript
+const ctf = require('../../lib/index.js');
+const { CTFUtils } = ctf;
+
+const TIMEOUT_MS = 5000;
+
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
+
+const tests = [
+    { value: "Hello", key: 3 },
+    { value: "World", key: 3 },
+    { value: "CTF", key: 3 }
+];
+
+async function runTests() {
+    console.log("【Caesar 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value, key } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Caesar(key)).val();
+        const isDetected = await ctf.detect.Caesar();
+        const decoded = await (await ctf.decode.Caesar(key)).val();
+
+        console.log(`  Caesar: "${value}" encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
+    }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
+}
+
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});
+```
+
+### 支持的测试类型
+
+| 类型 | 编码 | 解码 | 检测 | 测试模式 | 特殊参数 |
+|------|------|------|------|----------|----------|
+| Base16 | ✅ | ✅ | ✅ | normal | - |
+| Base32 | ✅ | ✅ | ✅ | normal | - |
+| Base58 | ✅ | ✅ | ✅ | normal | - |
+| Base62 | ✅ | ✅ | ✅ | normal | - |
+| Base64 | ✅ | ✅ | ✅ | normal | - |
+| Base85 | ✅ | ✅ | ✅ | normal | - |
+| Base91 | ✅ | ✅ | ✅ | normal | - |
+| BinStr | ✅ | ✅ | ✅ | normal | - |
+| OCT | ✅ | ✅ | ✅ | normal | - |
+| HEX | ✅ | ✅ | ✅ | normal | - |
+| Decimal | ✅ | ✅ | ✅ | normal | - |
+| Unicode | ✅ | ❌ | ✅ | normal | - |
+| Morse | ✅ | ✅ | ✅ | normal | 解码返回小写 |
+| Bacon | ✅ | ✅ | ✅ | normal | - |
+| Brainfuck | ✅ | ✅ | ✅ | bf-only | 检测编码结果 |
+| URL | ✅ | ✅ | ✅ | normal | - |
+| HTML | ✅ | ✅ | ✅ | normal | - |
+| Caesar | ✅ | ✅ | ❌ | normal | key: number |
+| ROT | ✅ | ✅ | ❌ | normal | key: number |
+| Affine | ✅ | ✅ | ❌ | normal | key: {a: number, b: number} |
+| Atbash | ✅ | ✅ | ✅ | normal | - |
+| Vigenere | ✅ | ✅ | ❌ | normal | key: string |
+| ADFGVX | ✅ | ✅ | ✅ | normal | key: string, 部分字符decode异常 |
+| RailFence | ✅ | ✅ | ✅ | normal | key: number |
+| Poem | ❌ | ✅ | ✅ | decode-only | 需完整诗文本 |
+| DangPu | ✅ | ✅ | ✅ | normal | - |
+| YuFoLunChan | ❌ | ✅ | ✅ | decode-only | 需加密内容 |
+| ZaHuoPu | ❌ | ✅ | ✅ | decode-only | 需加密内容 |
+| Exponential | ❌ | ✅ | ✅ | decode-only | 需加密内容 |
+| MD5 | ✅ | ❌ | ✅ | encode-only | 单向哈希 |
+| SimpleSub | ✅ | ✅ | ✅ | normal | key: 替换表 |
+
+#### 测试模式说明
+
+- **normal**: 标准模式，测试 encode → decode 能还原原始值
+- **encode-only**: 只测试 encode 功能 (如 MD5)
+- **decode-only**: 只测试 decode 功能 (如 Poem, YuFoLunChan, ZaHuoPu, Exponential)
+- **bf-only**: Brainfuck 专用，检测编码结果是否为有效 Brainfuck 代码
+
+### 测试覆盖要求
+
+根据项目要求，每个测试文件应满足：
+1. **至少 3 个测试用例**：每个加密类型至少测试 3 个不同的输入值
+2. **超时保护**：所有测试都应包含 5000ms 超时机制
+3. **异步支持**：使用 `async/await` 处理异步操作
+4. **CTFUtils 类**：使用类实例化方式进行测试
+
+### 批量生成测试脚本
+
+项目提供了 `scripts/fix-tests.js` 脚本，用于自动生成和修复测试文件：
+```bash
+node scripts/fix-tests.js
+```
+
+该脚本会根据 `cryptoConfig` 配置自动生成符合要求的测试文件。
+
+### 预期输出示例
+```
+==================================================
+CTF-UTILS 单独测试报告
+==================================================
+
+运行 Base64.test.js...
+✅ Base64 测试通过
+
+运行 Caesar.test.js...
+✅ Caesar 测试通过
+
+运行 Morse.test.js...
+✅ Morse 测试通过
+
+==================================================
+所有单独测试完成
+==================================================
+```
+
+### 测试结果说明
+
+- ✅ **通过**：测试用例全部成功，编码→解码能够还原原始文本
+- ❌ **失败**：测试用例中存在失败，可能是：
+  - 输入格式不符合加密类型要求
+  - 加密算法本身的行为特性（如大小写变化）
+  - 需要特殊参数才能完整测试
+- ⚠️ **跳过**：某些测试因配置了 `skipTest` 而跳过，通常是需要额外参数的复杂类型

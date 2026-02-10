@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["HELLO", "WORLD", "CTF{TEST}"];
+const TIMEOUT_MS = 5000;
 
-console.log("【Vigenere 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "HELLO", key: "KEY" },
+        { value: "WORLD" },
+        { value: "ATTACK" }
+];
 
-for (const original of tests) {
-    const key = "KEY";
-    const encoded = encode.Vigenere(original, key);
-    const decoded = decode.Vigenere(encoded, key);
-    
-    console.log(`  Vigenere: "${original}" -> encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【Vigenere 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value, key } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Vigenere("KEY")).val();
+
+        const decoded = await (await ctf.decode.Vigenere("KEY")).val();
+
+        console.log(`  Vigenere: "${value}" encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

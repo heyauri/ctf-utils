@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["HELLO", "WORLD", "CTF{TEST}"];
+const TIMEOUT_MS = 5000;
 
-console.log("【Affine 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "HELLO", key: {"a":5,"b":8} },
+        { value: "WORLD" },
+        { value: "TEST" }
+];
 
-for (const original of tests) {
-    const params = { a: 5, b: 8 };
-    const encoded = encode.Affine(original, params);
-    const decoded = decode.Affine(encoded, params);
-    
-    console.log(`  Affine: "${original}" -> encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【Affine 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value, key } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Affine({"a":5,"b":8})).val();
+
+        const decoded = await (await ctf.decode.Affine({"a":5,"b":8})).val();
+
+        console.log(`  Affine: "${value}" encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

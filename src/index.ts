@@ -1,6 +1,6 @@
-import decode from "./decode";
-import encode from "./encode";
-import detect from "./detect";
+import { decode, decodeSync } from "./decode";
+import { encode, encodeSync } from "./encode";
+import { detect, detectSync, detectAll, detectAllSync } from "./detect";
 import * as Utils from "./utils/Utils";
 import util from "util";
 
@@ -10,20 +10,39 @@ class CTFUtils {
     decode: Record<string, unknown>;
     detect: Record<string, unknown>;
     encode: Record<string, unknown>;
+    decodeSync: Record<string, unknown>;
+    detectSync: Record<string, unknown>;
+    encodeSync: Record<string, unknown>;
+    private args: unknown[];
 
     constructor(target: string, ...args: unknown[]) {
         this.oriTarget = target;
         this.currTarget = target;
+        this.args = args;
         this.decode = {};
         this.detect = {};
         this.encode = {};
+        this.decodeSync = {};
+        this.detectSync = {};
+        this.encodeSync = {};
 
         const decodeAny: any = decode;
         for (const k in decodeAny) {
             if (typeof decodeAny[k] === 'function') {
-                this.decode[k] = (...inputArgs: unknown[]) => {
-                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
-                    this.currTarget = decodeAny[k](...input);
+                this.decode[k] = async (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    this.currTarget = await decodeAny[k](...input);
+                    return this;
+                };
+            }
+        }
+
+        const decodeSyncAny: any = decodeSync;
+        for (const k in decodeSyncAny) {
+            if (typeof decodeSyncAny[k] === 'function') {
+                this.decodeSync[k] = (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    this.currTarget = decodeSyncAny[k](...input);
                     return this;
                 };
             }
@@ -32,10 +51,19 @@ class CTFUtils {
         const detectAny: any = detect;
         for (const k in detectAny) {
             if (typeof detectAny[k] === 'function') {
-                this.detect[k] = (...inputArgs: unknown[]) => {
-                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
-                    const result = detectAny[k](...input);
-                    return result;
+                this.detect[k] = async (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    return await detectAny[k](...input);
+                };
+            }
+        }
+
+        const detectSyncAny: any = detectSync;
+        for (const k in detectSyncAny) {
+            if (typeof detectSyncAny[k] === 'function') {
+                this.detectSync[k] = (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    return detectSyncAny[k](...input);
                 };
             }
         }
@@ -43,9 +71,20 @@ class CTFUtils {
         const encodeAny: any = encode;
         for (const k in encodeAny) {
             if (typeof encodeAny[k] === 'function') {
-                this.encode[k] = (...inputArgs: unknown[]) => {
-                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
-                    this.currTarget = encodeAny[k](...input);
+                this.encode[k] = async (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    this.currTarget = await encodeAny[k](...input);
+                    return this;
+                };
+            }
+        }
+
+        const encodeSyncAny: any = encodeSync;
+        for (const k in encodeSyncAny) {
+            if (typeof encodeSyncAny[k] === 'function') {
+                this.encodeSync[k] = (...inputArgs: unknown[]) => {
+                    const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...this.args];
+                    this.currTarget = encodeSyncAny[k](...input);
                     return this;
                 };
             }
@@ -73,4 +112,4 @@ class CTFUtils {
     [key: string]: unknown;
 }
 
-export { decode, encode, detect, Utils, CTFUtils };
+export { decode, encode, detect, decodeSync, encodeSync, detectSync, detectAll, detectAllSync, Utils, CTFUtils };

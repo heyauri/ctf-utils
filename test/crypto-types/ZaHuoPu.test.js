@@ -1,24 +1,45 @@
 const ctf = require('../../lib/index.js');
-const { decode } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF"];
+const TIMEOUT_MS = 5000;
 
-console.log("【ZaHuoPu 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "丁不勾示不小王不立罪不非" }
+];
 
-for (const original of tests) {
-    const decoded = decode.ZaHuoPu(original);
-    
-    console.log(`  ZaHuoPu: "${original}" -> decode:"${decoded}"`);
-    
-    if (decoded.length > 0) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【ZaHuoPu 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const isDetected = await ctf.detect.ZaHuoPu();
+
+        console.log(`  ZaHuoPu: "${value}" detect:${isDetected}`);
+
+        if (isDetected === true) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

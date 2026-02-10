@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode, detect } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["48656c6c6f", "776f726c64", "4354467b746573747d"];
+const TIMEOUT_MS = 5000;
 
-console.log("【Base16 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "CTF{test}" }
+];
 
-for (const original of tests) {
-    const decoded = decode.Base16(original);
-    const encoded = encode.Base16(decoded);
-    const isDetected = detect.Base16(encoded);
-    
-    console.log(`  Base16: "${original}" -> detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded.length > 0 && encoded === original.toUpperCase()) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【Base16 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Base16()).val();
+        const isDetected = await ctf.detect.Base16();
+        const decoded = await (await ctf.decode.Base16()).val();
+
+        console.log(`  Base16: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

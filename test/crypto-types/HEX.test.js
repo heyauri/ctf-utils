@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode, detect } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF{test}"];
+const TIMEOUT_MS = 5000;
 
-console.log("【HEX 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "CTF" }
+];
 
-for (const original of tests) {
-    const encoded = encode.HEX(original);
-    const decoded = decode.HEX(encoded);
-    const isDetected = detect.HEX(encoded);
-    
-    console.log(`  HEX: "${original}" -> detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original && isDetected) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【HEX 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.HEX()).val();
+        const isDetected = await ctf.detect.HEX();
+        const decoded = await (await ctf.decode.HEX()).val();
+
+        console.log(`  HEX: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});

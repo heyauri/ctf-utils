@@ -9,25 +9,27 @@ const timer = setTimeout(() => {
 }, TIMEOUT_MS);
 
 const tests = [
-        { value: "0123 0123" },
-        { value: "0123 123" },
-        { value: "123 0123" }
+        { value: "HELLO", key: "QWERTYUIOPASDFGHJKLZXCVBNM" },
+        { value: "WORLD" },
+        { value: "TEST" }
 ];
 
 async function runTests() {
-    console.log("【Exponential 测试】\n");
+    console.log("【SimpleSub 测试】\n");
 
     let passed = 0;
     let total = tests.length;
 
-    for (const { value } of tests) {
+    for (const { value, key } of tests) {
         const ctf = new CTFUtils(value);
 
-        const isDetected = await ctf.detect.Exponential();
+        const encoded = await (await ctf.encode.SimpleSub("QWERTYUIOPASDFGHJKLZXCVBNM")).val();
+        const isDetected = await ctf.detect.SimpleSub();
+        const decoded = await (await ctf.decode.SimpleSub("QWERTYUIOPASDFGHJKLZXCVBNM")).val();
 
-        console.log(`  Exponential: "${value}" detect:${isDetected}`);
+        console.log(`  SimpleSub: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
 
-        if (isDetected === true) {
+        if (decoded === value) {
             passed++;
             console.log(`    ✅`);
         } else {

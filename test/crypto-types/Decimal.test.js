@@ -1,26 +1,49 @@
 const ctf = require('../../lib/index.js');
-const { encode, decode, detect } = ctf;
+const { CTFUtils } = ctf;
 
-const tests = ["Hello", "World", "CTF"];
+const TIMEOUT_MS = 5000;
 
-console.log("【Decimal 测试】\n");
+const timer = setTimeout(() => {
+    console.log(`\n❌ 测试超时 (${TIMEOUT_MS}ms)`);
+    process.exit(1);
+}, TIMEOUT_MS);
 
-let passed = 0;
-let total = tests.length;
+const tests = [
+        { value: "Hello" },
+        { value: "World" },
+        { value: "CTF" }
+];
 
-for (const original of tests) {
-    const encoded = encode.Decimal(original);
-    const decoded = decode.Decimal(encoded);
-    const isDetected = detect.Decimal(encoded);
-    
-    console.log(`  Decimal: "${original}" -> detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
-    
-    if (decoded === original && isDetected) {
-        passed++;
-        console.log(`    ✅`);
-    } else {
-        console.log(`    ❌`);
+async function runTests() {
+    console.log("【Decimal 测试】\n");
+
+    let passed = 0;
+    let total = tests.length;
+
+    for (const { value } of tests) {
+        const ctf = new CTFUtils(value);
+
+        const encoded = await (await ctf.encode.Decimal()).val();
+        const isDetected = await ctf.detect.Decimal();
+        const decoded = await (await ctf.decode.Decimal()).val();
+
+        console.log(`  Decimal: "${value}" detect:${isDetected} encode:"${encoded}" -> decode:"${decoded}"`);
+
+        if (decoded === value) {
+            passed++;
+            console.log(`    ✅`);
+        } else {
+            console.log(`    ❌`);
+        }
     }
+
+    console.log(`\n结果: ${passed}/${total} 通过\n`);
+    clearTimeout(timer);
+    process.exit(passed === total ? 0 : 1);
 }
 
-console.log(`\n结果: ${passed}/${total} 通过\n`);
+runTests().catch(err => {
+    console.error('测试错误:', err);
+    clearTimeout(timer);
+    process.exit(1);
+});
