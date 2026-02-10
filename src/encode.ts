@@ -1,4 +1,4 @@
-import * as cryptoTypes from "./crypto_types/_index";
+import * as cryptoTypes from "./crypto-types/_index";
 
 const encode_dict: Record<string, (str: string, ...args: unknown[]) => string | Buffer> = {};
 for (const curr in cryptoTypes) {

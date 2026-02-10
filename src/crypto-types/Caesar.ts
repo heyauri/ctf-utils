@@ -1,5 +1,7 @@
 const rotCharCode = (charCode: number, basicNumber: number, rot: number = 13): number => {
-    return (charCode - basicNumber + rot) % 26 + basicNumber;
+    let result = (charCode - basicNumber + rot) % 26;
+    if (result < 0) result += 26;
+    return result + basicNumber;
 };
 
 const ROT = (input: string | Buffer, rot: number = 13): string | Buffer => {
@@ -31,33 +33,41 @@ const ROT = (input: string | Buffer, rot: number = 13): string | Buffer => {
     }
 };
 
-const de_Caesar = (input: string | Buffer, type: number | string = 13): string | Buffer => {
-    const t = Object.prototype.toString.call(type);
-    if (t === "[object Number]") {
-        return ROT(input, type as number);
-    }
-    if (t === "[object String]") {
-        switch (type) {
-            case "Avocat":
-                return ROT(input, 10);
-            case "ROT13":
-                return ROT(input, 13);
-            case "Cassis":
-                return ROT(input, -5);
-            case "Cassette":
-                return ROT(input, -6);
-            default:
-                return ROT(input, parseInt(type as string));
-        }
-    }
-    return "Caesar type is invalid";
+const en_Caesar = (input: string | Buffer, type: number | string = 13): string | Buffer => {
+    return ROT(input, type as number);
 };
 
-const en_Caesar = de_Caesar;
+const de_Caesar = (input: string | Buffer, type: number | string = 13): string | Buffer => {
+    let rot: number;
+    const t = Object.prototype.toString.call(type);
+    if (t === "[object Number]") {
+        rot = type as number;
+    } else if (t === "[object String]") {
+        switch (type) {
+            case "Avocat":
+                rot = 10;
+                break;
+            case "ROT13":
+                rot = 13;
+                break;
+            case "Cassis":
+                rot = -5;
+                break;
+            case "Cassette":
+                rot = -6;
+                break;
+            default:
+                rot = parseInt(type as string);
+        }
+    } else {
+        return "Caesar type is invalid";
+    }
+    return ROT(input, 26 - rot);
+};
 
 export {
     en_Caesar,
     de_Caesar,
     de_Caesar as decode,
-    de_Caesar as encode
+    en_Caesar as encode
 };

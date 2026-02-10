@@ -24,7 +24,6 @@ class CTFUtils {
                 this.decode[k] = (...inputArgs: unknown[]) => {
                     const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
                     this.currTarget = decodeAny[k](...input);
-                    console.log("decode", k, this.currTarget);
                     return this;
                 };
             }
@@ -35,8 +34,8 @@ class CTFUtils {
             if (typeof detectAny[k] === 'function') {
                 this.detect[k] = (...inputArgs: unknown[]) => {
                     const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
-                    console.log("detect", k, detectAny[k](...input));
-                    return this;
+                    const result = detectAny[k](...input);
+                    return result;
                 };
             }
         }
@@ -46,7 +45,7 @@ class CTFUtils {
             if (typeof encodeAny[k] === 'function') {
                 this.encode[k] = (...inputArgs: unknown[]) => {
                     const input = inputArgs.length ? [this.currTarget, ...inputArgs] : [this.currTarget, ...args];
-                    console.log("encode", k, encodeAny[k](...input));
+                    this.currTarget = encodeAny[k](...input);
                     return this;
                 };
             }

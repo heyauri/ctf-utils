@@ -1,7 +1,11 @@
 const is_Base64 = (str: string): boolean => {
     const cleaned = str.replace(/[\s=]/g, '');
-    if (cleaned.length % 4 !== 0) return false;
-    return /^[A-Za-z0-9+/]+$/.test(cleaned);
+    if (cleaned.length === 0) return false;
+    if (!/^[A-Za-z0-9+/]+$/.test(cleaned)) return false;
+    if (str.length % 4 !== 0) return false;
+    const paddingCount = (str.match(/=/g) || []).length;
+    if (paddingCount > 2) return false;
+    return true;
 };
 
 const de_Base64 = (str: string, type: number = 0): string | Buffer => {

@@ -8,6 +8,9 @@ const charCodesToString = (arr: number[], sep: string = ""): string => {
 };
 
 const invertNumber = (k: number, mod: number, bf: boolean = false): number => {
+    if (k === undefined || k === null || typeof k !== 'number' || isNaN(k)) {
+        return 0;
+    }
     if (bf) {
         for (let i = 1; i < mod; i += 2) {
             if ((i * k) % mod === 1) {
@@ -17,7 +20,13 @@ const invertNumber = (k: number, mod: number, bf: boolean = false): number => {
     } else {
         let x1 = 1, x2 = 0, x3 = mod;
         let y1 = 0, y2 = 1, y3 = k;
+        let iterations = 0;
+        const maxIterations = mod * 2;
         while (1) {
+            iterations++;
+            if (iterations > maxIterations) {
+                return 0;
+            }
             if (y3 === 0) {
                 break;
             }

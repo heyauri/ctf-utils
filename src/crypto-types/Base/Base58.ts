@@ -10,22 +10,23 @@ const is_Base58 = (str: string): boolean => {
 
 const de_Base58 = (str: string): string => {
     if (!str) return '';
-    let result: number[] = [];
-    let buffer = BigInt(0);
-    let bits = 0;
-
+    
+    let num = BigInt(0);
+    
     for (const c of str) {
         const val = BigInt(BASE58_CHARS.indexOf(c));
-        buffer = (buffer << 7n) + val;
-        bits += 7;
-
-        while (bits >= 8) {
-            bits -= 8;
-            result.push(Number((buffer >> BigInt(bits)) & 0xFFn));
-        }
+        num = num * 58n + val;
     }
-
-    return Buffer.from(result).toString();
+    
+    const hex = num.toString(16);
+    const paddedHex = hex.length % 2 === 0 ? hex : '0' + hex;
+    
+    const bytes: number[] = [];
+    for (let i = 0; i < paddedHex.length; i += 2) {
+        bytes.push(parseInt(paddedHex.substr(i, 2), 16));
+    }
+    
+    return Buffer.from(bytes).toString('ascii');
 };
 
 const en_Base58 = (str: string): string => {

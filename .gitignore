@@ -1,5 +1,4 @@
 node_modules
-test.js
 .DS_Store
 examples
 files
@@ -9,3 +8,4 @@ dist
 _archive
 lib
 todo.md
+ai.md

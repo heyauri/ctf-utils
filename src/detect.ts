@@ -1,4 +1,4 @@
-import * as cryptoTypes from "./crypto_types/_index";
+import * as cryptoTypes from "./crypto-types/_index";
 
 const detect_dict: Record<string, (str: string) => boolean> = {};
 for (const curr in cryptoTypes) {
