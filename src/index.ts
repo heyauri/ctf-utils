@@ -3,6 +3,7 @@ import { encode, encodeSync } from "./encode";
 import { detect, detectSync, detectAll, detectAllSync } from "./detect";
 import * as Utils from "./utils/Utils";
 import * as cryptoTypes from "./crypto-types/_index";
+import * as solver from "./solver";
 import util from "util";
 
 class CTFUtils {
@@ -14,6 +15,7 @@ class CTFUtils {
     decodeSync: Record<string, unknown>;
     detectSync: Record<string, unknown>;
     encodeSync: Record<string, unknown>;
+    solver: any;
     private args: unknown[];
 
     constructor(target: string, ...args: unknown[]) {
@@ -26,6 +28,7 @@ class CTFUtils {
         this.decodeSync = {};
         this.detectSync = {};
         this.encodeSync = {};
+        this.solver = solver;
 
         const decodeAny: any = decode;
         for (const k in decodeAny) {
@@ -113,5 +116,5 @@ class CTFUtils {
     [key: string]: unknown;
 }
 
-export { decode, encode, detect, decodeSync, encodeSync, detectSync, detectAll, detectAllSync, Utils, CTFUtils };
+export { decode, encode, detect, decodeSync, encodeSync, detectSync, detectAll, detectAllSync, Utils, CTFUtils, solver };
 export * from "./crypto-types/_index";

@@ -66,9 +66,73 @@ const is_XOR = (input: string | Buffer): boolean => {
     return buf.length > 0;
 };
 
+/**
+ * Calculate index of coincidence for a buffer
+ * @param buf Input buffer
+ * @returns Index of coincidence
+ */
+const calculateIC = (buf: Buffer): number => {
+    const freq: number[] = new Array(256).fill(0);
+    let total = 0;
+    
+    for (const byte of buf) {
+        freq[byte]++;
+        total++;
+    }
+    
+    if (total < 2) return 0;
+    
+    let ic = 0;
+    for (const count of freq) {
+        ic += count * (count - 1);
+    }
+    
+    return ic / (total * (total - 1));
+};
+
+/**
+ * Detect XOR key length using index of coincidence
+ * @param input Input string or buffer
+ * @param maxLength Maximum key length to check (default: 32)
+ * @returns Most likely key length
+ */
+const detectKeyLength = (input: string | Buffer, maxLength: number = 32): number => {
+    const inputBuf = Buffer.isBuffer(input) ? input : Buffer.from(input);
+    
+    if (inputBuf.length < 2) {
+        return 1;
+    }
+    
+    const icValues: { length: number; ic: number }[] = [];
+    
+    for (let length = 1; length <= maxLength; length++) {
+        if (inputBuf.length < length * 2) break;
+        
+        const chunks: Buffer[] = [];
+        for (let i = 0; i < length; i++) {
+            const chunk = Buffer.alloc(Math.floor((inputBuf.length - i) / length));
+            for (let j = 0; j < chunk.length; j++) {
+                chunk[j] = inputBuf[i + j * length];
+            }
+            chunks.push(chunk);
+        }
+        
+        const avgIC = chunks.reduce((sum, chunk) => sum + calculateIC(chunk), 0) / chunks.length;
+        icValues.push({ length, ic: avgIC });
+    }
+    
+    if (icValues.length === 0) return 1;
+    
+    // Sort by IC value (higher is better)
+    icValues.sort((a, b) => b.ic - a.ic);
+    
+    return icValues[0].length;
+};
+
 export {
     XOR,
     bruteXOR,
     is_XOR,
-    is_XOR as detect
+    is_XOR as detect,
+    detectKeyLength
 };

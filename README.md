@@ -4,12 +4,13 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 
 ## Features
 
-- **50+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
+- **60+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
 - **CLI tool** - Command-line interface for quick operations
 - **File analysis tools** - LSB steganography, PNG structure analysis, ZIP pseudo-encryption detection
+- **RSA solver** - Advanced RSA cryptography tools with support for key generation, encryption/decryption, and common attacks
 - **Zero external dependencies** - Only core crypto and encoding modules
 
 ## Installation
@@ -181,6 +182,66 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | FrequencyAnalysis | | Character frequency analysis |
 | DictionaryGenerator | | Password dictionary generation |
 | AES/DES | | AES-128/192/256 and DES encryption |
+
+### RSA Solver
+
+The RSA solver provides comprehensive tools for RSA cryptography challenges, including key generation, encryption/decryption, and common attacks.
+
+#### RSA Features
+
+- **Key generation** - Generate RSA key pairs with configurable bit lengths
+- **Encryption/decryption** - Basic RSA encryption and decryption with CRT optimization
+- **Common attacks** - Implementations of various RSA attack methods
+- **Utility functions** - Prime detection, key strength evaluation, and more
+
+#### RSA Usage Examples
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// Generate RSA key pair
+const keyPair = await solver.RSA.RSASolver.generateKeyPair(512);
+console.log(keyPair.publicKey);
+console.log(keyPair.privateKey);
+
+// Encrypt and decrypt message
+const message = "Hello, RSA!";
+const encrypted = solver.RSA.RSASolver.encrypt(message, keyPair.publicKey);
+const decrypted = solver.RSA.RSASolver.decrypt(encrypted, keyPair.privateKey);
+console.log(decrypted); // "Hello, RSA!"
+
+// Evaluate key strength
+const strength = solver.RSA.RSASolver.evaluateKeyStrength(keyPair.publicKey.n);
+console.log(strength); // { keySize: 512, strength: "Weak" }
+
+// Run small exponent attack (e=3)
+const n = 3233n; // 61 * 53
+const e = 3n;
+const ciphertext = 2790n;
+const plaintext = solver.RSA.attacks.smallExponent(ciphertext, { n, e });
+console.log(plaintext); // 42n
+
+// Run Coppersmith attack for small roots
+const polynomial = (x) => x - 42n;
+const root = solver.RSA.attacks.coppersmith(n, polynomial, 0.5);
+console.log(root); // 42n
+```
+
+#### Supported RSA Attacks
+
+| Attack | Description |
+|--------|-------------|
+| smallExponent | Small exponent attack (e=3) |
+| commonModulus | Common modulus attack with two different exponents |
+| wiener | Wiener's attack for small private exponent |
+| hastadBroadcast | Hastad's broadcast attack with multiple public keys |
+| franklinReiter | Franklin-Reiter related message attack |
+| bonehDurfee | Boneh-Durfee attack for small private exponent |
+| coppersmith | Coppersmith's attack for small roots of polynomials |
+| coppersmithFactor | Coppersmith's attack for factoring with partial information |
+| factorKnownPrimes | Factor n using known p and q |
+| privateKeyFromFactors | Calculate private key from prime factors |
+| trialDivision | Trial division for small factors |
 
 ### File Analysis Tools
 

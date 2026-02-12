@@ -13,6 +13,7 @@ import * as Exponential from "./Exponential";
 import * as HEX from "./HEX";
 import * as HTML from "./HTML";
 import * as MD5 from "./MD5";
+import * as Hash from "./Hash";
 import * as Morse from "./Morse";
 import * as OCT from "./OCT";
 import * as Poem from "./Poem";
@@ -60,6 +61,7 @@ export {
     HEX,
     HTML,
     MD5,
+    Hash,
     Morse,
     OCT,
     Poem,
