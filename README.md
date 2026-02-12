@@ -4,11 +4,12 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 
 ## Features
 
-- **40+ encoding/crypto methods** - Supports OCT, HEX, Base64, Unicode, Morse, Bacon, MD5, Caesar, ROT, ADFGVX, and more
+- **45+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
 - **CLI tool** - Command-line interface for quick operations
+- **File analysis tools** - LSB steganography, PNG structure analysis, ZIP pseudo-encryption detection
 - **Zero external dependencies** - Only core crypto and encoding modules
 
 ## Installation
@@ -111,34 +112,86 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 
 ## Supported Methods
 
-| Type | Detect | Decode | Encode |
-| :--- | :---: | :---: | :---: |
-| OCT | ✅ | ✅ | ✅ |
-| HEX | ✅ | ✅ | ✅ |
-| Base64 | ✅ | ✅ | ✅ |
-| Unicode | ✅ | ✅ | ✅ |
-| Morse | ✅ | ✅ | ✅ |
-| Bacon | ✅ | ✅ | ✅ |
-| MD5 | ✅ | | ✅ |
-| File Type | ✅ | | |
-| Poem | ✅ | ✅ | |
-| Caesar | | ✅ | ✅ |
-| ROT5/13/47 | | ✅ | ✅ |
-| Affine | | ✅ | ✅ |
-| Exponential | ✅ | ✅ | |
-| DangPu | ✅ | ✅ | |
-| YuFoLunChan | ✅ | ✅ | |
-| ZaHuoPu | ✅ | ✅ | |
-| ADFGVX | ✅ | ✅ | ✅ |
-| Vigenere | ✅ | ✅ | ✅ |
-| RailFence | ✅ | ✅ | ✅ |
-| Atbash | ✅ | ✅ | ✅ |
-| SimpleSub | ✅ | ✅ | ✅ |
-| URL | ✅ | ✅ | ✅ |
-| HTML | ✅ | ✅ | ✅ |
-| Binary String | ✅ | ✅ | ✅ |
-| Decimal | ✅ | ✅ | ✅ |
-| Brainfuck | ✅ | ✅ | ✅ |
+### Classical Ciphers
+
+| Cipher | Detect | Decode | Encode | Description |
+|--------|--------|--------|--------|-------------|
+| Caesar | | ✅ | ✅ | Shift cipher with configurable shift |
+| ROT5/13/47 | | ✅ | ✅ | ROTation ciphers |
+| Vigenere | ✅ | ✅ | ✅ | Polyalphabetic substitution cipher |
+| Playfair | ✅ | ✅ | ✅ | Polygraphic substitution cipher |
+| Affine | ✅ | ✅ | ✅ | Linear substitution cipher |
+| RailFence | ✅ | ✅ | ✅ | Transposition cipher |
+| Atbash | ✅ | ✅ | ✅ | Alphabet reversal cipher |
+| SimpleSub | ✅ | ✅ | ✅ | Simple substitution cipher |
+| ADFGVX | ✅ | ✅ | ✅ | Fractionated cipher |
+| Polybius | ✅ | ✅ | ✅ | Square coordinate cipher |
+
+### Modern Encodings
+
+| Encoding | Detect | Decode | Encode | Description |
+|----------|--------|--------|--------|-------------|
+| Base64 | ✅ | ✅ | ✅ | RFC 4648 Base64 |
+| Base32 | ✅ | ✅ | ✅ | RFC 4648 Base32 |
+| Base16 | ✅ | ✅ | ✅ | Hexadecimal |
+| Base58 | ✅ | ✅ | ✅ | Bitcoin address encoding |
+| Base62 | ✅ | ✅ | ✅ | Compact encoding |
+| Base85 | ✅ | ✅ | ✅ | Ascii85/high-density |
+| Base91 | ✅ | ✅ | ✅ | High-efficiency encoding |
+| HEX | ✅ | ✅ | ✅ | Hexadecimal string |
+| OCT | ✅ | ✅ | ✅ | Octal string |
+| Decimal | ✅ | ✅ | ✅ | Decimal ASCII |
+| BinStr | ✅ | ✅ | ✅ | Binary string |
+| URL | ✅ | ✅ | ✅ | URL encoding |
+| HTML | ✅ | ✅ | ✅ | HTML entities |
+| Unicode | ✅ | ✅ | ✅ | Unicode escape sequences |
+
+### Brainfuck/Ook! Family
+
+| Language | Detect | Decode | Encode | Description |
+|----------|--------|--------|--------|-------------|
+| Brainfuck | ✅ | ✅ | ✅ | Brainfuck language |
+| Ook! | ✅ | ✅ | ✅ | Ook! language variant |
+
+### Chinese Ciphers
+
+| Cipher | Detect | Decode | Encode | Description |
+|--------|--------|--------|--------|-------------|
+| Morse | ✅ | ✅ | ✅ | Morse code |
+| DangPu | ✅ | ✅ | ✅ | 当铺密码 (shop password) |
+| ZaHuoPu | ✅ | ✅ | ✅ | 座右铭密码 (motto cipher) |
+| Poem | ✅ | ✅ | ✅ | 藏头诗 (acrostic poem) |
+| YuFoLunChan | ✅ | ✅ | ✅ | 与佛论禅 (Buddhist cipher) |
+| Exponential | ✅ | ✅ | ✅ | Exponential cipher |
+
+### Cryptographic Hash
+
+| Hash | Detect | Encode | Description |
+|------|--------|--------|-------------|
+| MD5 | ✅ | ✅ | MD5 hash (32 hex) |
+
+### Utility Functions
+
+| Function | Detect | Description |
+|----------|--------|-------------|
+| XOR | ✅ | XOR encryption/brute-force |
+| FrequencyAnalysis | | Character frequency analysis |
+| DictionaryGenerator | | Password dictionary generation |
+
+### File Analysis Tools
+
+| Tool | Description |
+|------|-------------|
+| BinaryFile | File type detection via magic bytes |
+| PNGCheck | PNG structure analysis & steganography detection |
+| ZIPInfo | ZIP file analysis & pseudo-encryption detection |
+| LSBExtract | Least Significant Bit steganography extraction |
+
+### Bacon Cipher
+
+| Cipher | Detect | Decode | Encode | Description |
+|--------|--------|--------|--------|-------------|
+| Bacon | ✅ | ✅ | ✅ | Bacon's cipher (A/B or 0/1) |
 
 ## API Reference
 
@@ -180,6 +233,61 @@ new CTFUtils("hello")
 await new CTFUtils("HELLO", "KEY")
     .encode.ADFGVX()
     .val();
+```
+
+### File Analysis Examples
+
+```javascript
+const { BinaryFile, PNGCheck, ZIPInfo, LSBExtract } = require("ctf-utils");
+const fs = require("fs");
+
+// Detect file type
+const pngBuffer = fs.readFileSync("image.png");
+const types = BinaryFile.detect(pngBuffer);
+console.log(types); // ['png']
+
+// Check PNG structure
+const pngInfo = PNGCheck.check("image.png");
+console.log(pngInfo);
+
+// Analyze ZIP for pseudo-encryption
+const zipInfo = ZIPInfo.analyze("file.zip");
+console.log(zipInfo.hasPseudoEncryption);
+
+// Extract LSB hidden data
+const hiddenData = LSBExtract.extract("stego.png", 3, "LSB");
+console.log(hiddenData);
+```
+
+### Frequency Analysis
+
+```javascript
+const { FrequencyAnalysis } = require("ctf-utils");
+
+// Analyze character frequency
+const result = FrequencyAnalysis.analyze("Hello World");
+console.log(result.letters['H']); // Frequency of 'H'
+console.log(result.ic);           // Index of Coincidence
+
+// Find best XOR key
+const xorResults = FrequencyAnalysis.bestXORKey("encrypted data");
+console.log(xorResults[0]); // Most likely key and result
+```
+
+### Dictionary Generation
+
+```javascript
+const { DictionaryGenerator } = require("ctf-utils");
+
+// Generate keyboard pattern passwords
+const patterns = DictionaryGenerator.keyboardPatterns("qwerty", 3);
+
+// Generate date-based passwords
+const dates = DictionaryGenerator.datePatterns(2020, 2025);
+
+// Generate combination dictionary
+const combos = DictionaryGenerator.combine(["password", "123"], ["!", "@"]);
+// ['password', '123', 'password!', 'password@', '123!', '123@']
 ```
 
 ## Development

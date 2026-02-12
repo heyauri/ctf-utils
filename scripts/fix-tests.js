@@ -33,6 +33,9 @@ const cryptoConfig = {
     Exponential: { tests: ["0123 0123", "0123 123", "123 0123"], args: [], hasDetect: true, hasEncode: false, hasDecode: true, mode: 'decode-only' },
     MD5: { tests: ["Hello", "World", "CTF{test}"], args: [], hasDetect: true, hasEncode: true, hasDecode: false, mode: 'encode-only' },
     SimpleSub: { tests: ["HELLO", "WORLD", "TEST"], args: [{ key: "QWERTYUIOPASDFGHJKLZXCVBNM" }], hasDetect: true, hasEncode: true, hasDecode: true },
+    Polybius: { tests: ["HELLO", "WORLD", "ATTACK", "CTF", "FLAG"], args: [], hasDetect: true, hasEncode: true, hasDecode: true },
+    Playfair: { tests: ["HELLO", "WORLD", "ATTACK"], args: [{ key: "KEY" }], hasDetect: true, hasEncode: true, hasDecode: true },
+    XOR: { tests: ["Hello", "World", "Test"], args: [], hasDetect: true, hasEncode: true, hasDecode: false, mode: 'xor-tool' },
 };
 
 function generateTestFile(name, config) {
@@ -113,6 +116,13 @@ ${detectLine}
         detectLog = hasDetect ? ` detect:\${isDetected}` : '';
         encodeLog = ` encode:"\${encoded}"`;
         decodeLog = ` -> decode:"\${decoded}"`;
+    } else if (mode === 'xor-tool') {
+        methodCalls = `        const singleXor = await (await ctf.encode.${name}(0x42)).val();
+        const isDetected = await ctf.detect.${name}();
+        const brute = ctf.bruteXOR(1);`;
+        checkCondition = 'isDetected === true && brute.length > 0';
+        detectLog = ` detect:\${isDetected}`;
+        encodeLog = ` singleXor:"\${singleXor.substring(0, 20)}..." brute:\${brute.length}`;
     } else if (hasEncode && !hasDecode) {
         methodCalls = `        const encoded = await (await ctf.encode.${name}()).val();
         const isDetected = await ctf.detect.${name}();`;

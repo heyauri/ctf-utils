@@ -461,19 +461,847 @@ detect.BinaryFile('89504E470D0A1A0A', 'fast');
 | 3C3F786D6C | xml |
 | 44656C69766572792D646174653A | eml |
 
-#### 23. 全部检测
+#### 23. Polybius 坐标检测
 ```javascript
-detect.detectAll(str: string): object
+detect.Polybius(str: string): boolean
 ```
 **示例：**
 ```javascript
-const result = detect.detectAll('.... . .-.. .-.. ---');
-// { HEX: false, OCT: false, Morse: true, ... }
+detect.Polybius('11 45 23 15');  // true
+detect.Polybius('hello');         // false
+```
+
+#### 24. XOR 工具检测
+```javascript
+detect.XOR(input: string | Buffer): boolean
+```
+**示例：**
+```javascript
+detect.XOR('Hello');         // true
+detect.XOR(Buffer.from([1,2,3]));  // true
+```
+
+#### Playfair 密码检测
+```javascript
+detect.Playfair(str: string): boolean
+```
+**示例：**
+```javascript
+detect.Playfair('DBNVMI');  // true
+detect.Playfair('Hello');    // false
 ```
 
 ---
 
-## decode 方法
+## Playfair 密码 (新增)
+
+Playfair 密码是一种双字母代换密码，使用 5x5 密钥矩阵进行加密/解密。
+
+### 检测
+```javascript
+detect.Playfair(str: string): boolean
+```
+**示例：**
+```javascript
+detect.Playfair('DBNVMI');  // true
+detect.Playfair('Hello');    // false
+```
+
+### 加密
+```javascript
+encode.Playfair(input: string, key: string): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | 要加密的明文 |
+| key | string | 密钥 |
+
+**描述：** 使用 5x5 密钥矩阵进行双字母加密（自动处理重复字母和填充 X）。
+
+**示例：**
+```javascript
+encode.Playfair('HELLO', 'KEY');
+// 'DBNVMI'
+encode.Playfair('WORLD', 'KEY');
+// 'ZMQMGV'
+```
+
+### 解密
+```javascript
+decode.Playfair(input: string, key: string): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | 要解密的密文 |
+| key | string | 密钥 |
+
+**示例：**
+```javascript
+decode.Playfair('DBNVMI', 'KEY');
+// 'HELLO'
+decode.Playfair('ZMQMGV', 'KEY');
+// 'WORLD'
+```
+
+### CTFUtils 链式调用示例
+```javascript
+const { CTFUtils } = require('./lib/index.js');
+
+await new CTFUtils('HELLO', 'KEY')
+    .encode.Playfair()
+    .val();
+// 'DBNVMI'
+
+new CTFUtils('DBNVMI', 'KEY')
+    .decodeSync.Playfair()
+    .val();
+// 'HELLO'
+```
+
+---
+
+## XOR 加密工具 (新增)
+
+提供 XOR 加密、暴力破解和密钥检测功能。
+
+### 检测
+```javascript
+detect.XOR(input: string | Buffer): boolean
+```
+**示例：**
+```javascript
+detect.XOR('Hello');         // true
+detect.XOR(Buffer.from([1,2,3]));  // true
+```
+
+### 单字节 XOR 加密/解密
+```javascript
+encode.XOR(input: string | Buffer, key: number | string): string | Buffer
+decode.XOR(input: string | Buffer, key: number | string): string | Buffer
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | Buffer | 输入文本或字节 |
+| key | number | string | 单字节密钥 (0-255) |
+
+**示例：**
+```javascript
+// 加密
+encode.XOR('Hello', 0x42);
+// '1elsm'
+
+// 解密
+decode.XOR(encode.XOR('Hello', 0x42), 0x42);
+// 'Hello'
+
+// 使用 Buffer
+encode.XOR(Buffer.from('Hello'), 0x42);
+// Buffer<31 65 6c 73 6d>
+```
+
+### 多字节 XOR 加密/解密
+```javascript
+XOR(input: string | Buffer, key: Buffer): string | Buffer
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | Buffer | 输入文本或字节 |
+| key | Buffer | 多字节密钥 |
+
+**示例：**
+```javascript
+const key = Buffer.from([1, 2, 3]);
+XOR('Hello World', key);
+// 加密结果
+
+XOR(XOR('Hello World', key), key);
+// 'Hello World'
+```
+
+### 暴力破解单字节 XOR
+```javascript
+bruteXOR(input: string | Buffer, maxResults?: number): { key: number; result: string }[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | Buffer | 加密的输入 |
+| maxResults | number | 最大返回结果数 (默认 10) |
+
+**描述：** 尝试所有 0-255 的密钥，返回所有可打印结果（按可能性排序）。
+
+**示例：**
+```javascript
+const encrypted = encode.XOR('Hello', 0x42);
+const results = bruteXOR(encrypted);
+
+console.log('找到', results.length, '个可能结果:');
+results.forEach(r => {
+    console.log(`Key: ${r.key}, Result: "${r.result}"`);
+});
+```
+
+### 暴力破解多字节 XOR
+```javascript
+bruteXORMulti(input: string | Buffer, keyLength: number, maxResults?: number): { key: Buffer; result: string }[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | Buffer | 加密的输入 |
+| keyLength | number | 猜测的密钥长度 |
+| maxResults | number | 最大返回结果数 (默认 5) |
+
+**示例：**
+```javascript
+const encrypted = XOR('Hello World', Buffer.from([1,2,3]));
+const results = bruteXORMulti(encrypted, 3);
+
+results.forEach(r => {
+    console.log(`Key: [${r.key.join(', ')}], Result: "${r.result}"`);
+});
+```
+
+### 最佳密钥猜测 (基于频率分析)
+```javascript
+bestXORKey(input: string | Buffer, keyLength?: number): { key: number | Buffer; result: string; score: number }[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | Buffer | 加密的输入 |
+| keyLength | number | 密钥长度 (默认 1) |
+
+**描述：** 基于字符频率分析找出最可能的密钥。
+
+**示例：**
+```javascript
+const encrypted = encode.XOR('Hello World', 0x42);
+const best = bestXORKey(encrypted, 1);
+
+console.log('最佳密钥:', best[0].key);
+console.log('解密结果:', best[0].result);
+console.log('评分:', best[0].score);
+```
+
+---
+
+## 频率分析工具 (新增)
+
+提供字符频率统计和索引重合分析功能。
+
+### 字符频率分析
+```javascript
+FrequencyAnalysis.analyze(text: string): {
+    letters: { [char: string]: number },
+    bigrams: { [bigram: string]: number },
+    trigrams: { [trigram: string]: number },
+    ic: number,
+    chiSquared: number
+}
+```
+**返回值：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| letters | object | 单字符频率统计 |
+| bigrams | object | 双字符组合频率 |
+| trigrams | object | 三字符组合频率 |
+| ic | number | Index of Coincidence (重合指数) |
+| chiSquared | number | 卡方统计值 |
+
+**示例：**
+```javascript
+const result = FrequencyAnalysis.analyze('Hello World');
+
+console.log('H 的频率:', result.letters['H']);
+console.log('He 的频率:', result.bigrams['He']);
+console.log('Hel 的频率:', result.trigrams['Hel']);
+console.log('重合指数:', result.ic);
+console.log('卡方值:', result.chiSquared);
+```
+
+### 判断语言类型
+```javascript
+FrequencyAnalysis.detectLanguage(text: string): {
+    likely: string,
+    scores: { [language: string]: number }
+}
+```
+**返回值：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| likely | string | 最可能的语言 (english/chinese/nonsense) |
+| scores | object | 各语言评分 |
+
+**示例：**
+```javascript
+const lang = FrequencyAnalysis.detectLanguage('The quick brown fox');
+console.log('最可能语言:', lang.likely);
+// 'english'
+
+const lang2 = FrequencyAnalysis.detectLanguage('Xyzw qnop rstu');
+console.log('最可能语言:', lang2.likely);
+// 'nonsense'
+```
+
+### 判断是否为明文
+```javascript
+FrequencyAnalysis.isReadable(text: string, threshold?: number): boolean
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| text | string | 要检测的文本 |
+| threshold | number | 判定阈值 (默认 0.06) |
+
+**示例：**
+```javascript
+FrequencyAnalysis.isReadable('The quick brown fox');
+// true
+
+FrequencyAnalysis.isReadable('Xyzw qnop rstu');
+// false
+```
+
+### 破解凯撒密码
+```javascript
+FrequencyAnalysis.caesarBrute(text: string): {
+    shift: number,
+    decrypted: string,
+    score: number
+}[]
+```
+**描述：** 分析所有 25 种移位，返回最可能的解密结果（按评分排序）。
+
+**示例：**
+```javascript
+const results = FrequencyAnalysis.caesarBrute('Khoor Zruog');
+// [
+//   { shift: 3, decrypted: 'Hello World', score: 0.95 },
+//   { shift: 10, decrypted: 'Vybqb Bqyxb', score: 0.12 },
+//   ...
+// ]
+
+console.log('最佳移位:', results[0].shift);
+// 3
+console.log('解密结果:', results[0].decrypted);
+// 'Hello World'
+```
+
+### Vigenere 密钥长度分析
+```javascript
+FrequencyAnalysis.vigenereKeyLength(text: string): number[]
+```
+**描述：** 基于重合指数分析可能的密钥长度。
+
+**示例：**
+```javascript
+const lengths = FrequencyAnalysis.vigenereKeyLength('DLHY SBMRA...');
+console.log('可能的密钥长度:', lengths);
+// [5, 10, 15, ...]
+```
+
+### Vigenere 密钥破解
+```javascript
+FrequencyAnalysis.vigenereKey(text: string, keyLength: number): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| text | string | 加密文本 |
+| keyLength | number | 密钥长度 |
+
+**示例：**
+```javascript
+const key = FrequencyAnalysis.vigenereKey('Ciphertext', 5);
+console.log('破解的密钥:', key);
+// 'KEYKE'
+```
+
+### 全自动 Vigenere 破解
+```javascript
+FrequencyAnalysis.vigenereCrack(text: string): {
+    key: string,
+    decrypted: string
+}
+```
+**描述：** 自动分析密钥长度并破解 Vigenere 密码。
+
+**示例：**
+```javascript
+const result = FrequencyAnalysis.vigenereCrack('RIJVS UYVJN...');
+console.log('密钥:', result.key);
+// 'KEY'
+console.log('明文:', result.decrypted);
+// 'HELLOWORLD'
+```
+
+### 最佳 XOR 密钥猜测
+```javascript
+FrequencyAnalysis.bestXORKey(input: string | Buffer, keyLength?: number): {
+    key: number | Buffer,
+    result: string,
+    score: number
+}[]
+```
+**描述：** 基于字符频率分析找出最可能的 XOR 密钥。
+
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string \| Buffer | 加密的输入 |
+| keyLength | number | 密钥长度 (默认 1) |
+
+**示例：**
+```javascript
+const encrypted = encode.XOR('Hello World', 0x42);
+const best = FrequencyAnalysis.bestXORKey(encrypted, 1);
+
+console.log('最佳密钥:', best[0].key);
+// 66 (0x42)
+console.log('解密结果:', best[0].result);
+// 'Hello World'
+console.log('评分:', best[0].score);
+// 0.95
+```
+
+---
+
+## 字典生成器 (新增)
+
+根据各种模式生成密码字典。
+
+### 键盘模式生成
+```javascript
+DictionaryGenerator.keyboardPatterns(base: string, depth: number): string[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| base | string | 基础字符串 (如 'qwerty') |
+| depth | number | 递归深度 |
+
+**示例：**
+```javascript
+DictionaryGenerator.keyboardPatterns('qwerty', 2);
+// ['qwerty', 'qwer', 'qwe', 'qw', 'q', 'erty', 'rty', 'ty', 'y', ...]
+
+DictionaryGenerator.keyboardPatterns('asdf', 3);
+// 更多组合...
+```
+
+### 日期模式生成
+```javascript
+DictionaryGenerator.datePatterns(startYear: number, endYear: number, formats?: string[]): string[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| startYear | number | 起始年份 |
+| endYear | number | 结束年份 |
+| formats | string[] | 日期格式数组 (可选) |
+
+**默认格式：**
+- `yyyyMMdd`
+- `yyyy-MM-dd`
+- `yyyy/MM/dd`
+- `ddMMyyyy`
+- `MMddyyyy`
+- `yyyyMM`
+- `MMyyyy`
+
+**示例：**
+```javascript
+DictionaryGenerator.datePatterns(2020, 2025);
+// ['20200101', '2020-01-01', '2020/01/01', '01012020', ...]
+
+DictionaryGenerator.datePatterns(2000, 2005, ['yyyy', 'yy']);
+// ['2000', '2001', '2002', '2003', '2004', '2005', '00', '01', '02', '03', '04', '05']
+```
+
+### 组合字典
+```javascript
+DictionaryGenerator.combine(words1: string[], words2: string[], separator?: string): string[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| words1 | string[] | 第一组单词 |
+| words2 | string[] | 第二组单词 |
+| separator | string | 连接符 (默认 '') |
+
+**示例：**
+```javascript
+DictionaryGenerator.combine(['password', 'admin'], ['123', '!@#']);
+// ['password123', 'password!@#', 'admin123', 'admin!@#']
+
+DictionaryGenerator.combine(['password'], ['!', '@', '#'], '_');
+// ['password_!', 'password_@', 'password_#']
+```
+
+### 变形字典
+```javascript
+DictionaryGenerator.mutate(word: string, options?: {
+    leet?: boolean,
+    capitalize?: boolean,
+    append?: string[],
+    prepend?: string[]
+}): string[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| word | string | 基础单词 |
+| options | object | 变形选项 |
+| options.leet | boolean | 是否进行 1337 替换 (默认 true) |
+| options.capitalize | boolean | 是否首字母大写 (默认 true) |
+| options.append | string[] | 追加的后缀 |
+| options.prepend | string[] | 添加的前缀 |
+
+**示例：**
+```javascript
+DictionaryGenerator.mutate('password');
+// ['password', 'Password', 'p@ssword', 'P@ssword', ...]
+
+DictionaryGenerator.mutate('admin', { append: ['123', '!'], prepend: ['#', '@'] });
+// ['admin', 'Admin', 'admin123', 'admin!', '#admin', '#admin123', ...]
+```
+
+### 完整字典生成
+```javascript
+DictionaryGenerator.generate(options: {
+    baseWords?: string[],
+    years?: number[],
+    depth?: number,
+    leet?: boolean
+}): string[]
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| baseWords | string[] | 基础单词列表 |
+| years | number[] | 年份范围 |
+| depth | number | 键盘模式深度 |
+| leet | boolean | 是否包含 1337 替换 |
+
+**示例：**
+```javascript
+DictionaryGenerator.generate({
+    baseWords: ['password', 'admin'],
+    years: [2020, 2025],
+    depth: 1,
+    leet: true
+});
+// ['password', 'Password', 'p@ssword', '2020', 'password2020', ...]
+```
+
+---
+
+## LSB 隐写提取 (新增)
+
+从图片中提取最低有效位隐写的数据。
+
+### 提取 LSB 数据
+```javascript
+LSBExtract.extract(filePath: string, bitCount?: number, mode?: string): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | 图片文件路径 |
+| bitCount | number | 每像素提取的位数 (默认 1) |
+| mode | string | 模式：'LSB' 或 'MSB' (默认 'LSB') |
+
+**返回值：** 提取的二进制字符串
+
+**示例：**
+```javascript
+// 提取最低 1 位
+const binary1 = LSBExtract.extract('stego.png', 1, 'LSB');
+console.log('提取的二进制:', binary1);
+
+// 提取最低 2 位
+const binary2 = LSBExtract.extract('stego.png', 2, 'LSB');
+
+// 提取为 ASCII
+const ascii = LSBExtract.extract('stego.png', 1, 'LSB');
+const text = ascii.match(/.{8}/g).map(b => String.fromCharCode(parseInt(b, 2))).join('');
+console.log('提取的文本:', text);
+```
+
+### 提取并转换为 ASCII 文本
+```javascript
+LSBExtract.extractText(filePath: string, bitCount?: number, mode?: string): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | 图片文件路径 |
+| bitCount | number | 每像素提取的位数 (默认 1) |
+| mode | string | 模式：'LSB' 或 'MSB' (默认 'LSB') |
+
+**示例：**
+```javascript
+const text = LSBExtract.extractText('stego.png', 1, 'LSB');
+console.log('提取的文本:', text);
+// 'Hello CTF!'
+```
+
+### 提取并保存为文件
+```javascript
+LSBExtract.extractToFile(filePath: string, outputPath: string, bitCount?: number, mode?: string): void
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | 源图片路径 |
+| outputPath | string | 输出文件路径 |
+| bitCount | number | 每像素提取的位数 (默认 1) |
+| mode | string | 模式 (默认 'LSB') |
+
+**示例：**
+```javascript
+LSBExtract.extractToFile('stego.png', 'output.bin', 1, 'LSB');
+console.log('数据已保存到 output.bin');
+```
+
+### 批量提取（平面图像）
+```javascript
+LSBExtract.extractPlane(filePath: string, plane: number, width: number, height: number): string
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | 图片文件路径 |
+| plane | number | 颜色平面 (0=R, 1=G, 2=B) |
+| width | number | 图像宽度 |
+| height | number | 图像高度 |
+
+**示例：**
+```javascript
+// 提取红色平面的 LSB
+const redLSB = LSBExtract.extractPlane('stego.png', 0, 640, 480);
+console.log('红色平面 LSB:', redLSB);
+```
+
+---
+
+## PNG 文件检查 (新增)
+
+分析 PNG 文件结构，检测隐写痕迹。
+
+### 检查 PNG 文件
+```javascript
+PNGCheck.check(filePath: string): {
+    isPNG: boolean,
+    hasAncillaryChunks: boolean,
+    chunks: string[],
+    hasStego: boolean,
+    details: string[]
+}
+```
+**返回值：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| isPNG | boolean | 是否为有效 PNG |
+| hasAncillaryChunks | boolean | 是否包含辅助块 |
+| chunks | string[] | 所有块类型列表 |
+| hasStego | boolean | 是否可能包含隐写 |
+| details | string[] | 详细信息 |
+
+**示例：**
+```javascript
+const result = PNGCheck.check('image.png');
+
+console.log('是有效 PNG:', result.isPNG);
+console.log('包含辅助块:', result.hasAncillaryChunks);
+console.log('块列表:', result.chunks);
+console.log('可能包含隐写:', result.hasStego);
+```
+
+### 检测 PNG 隐写
+```javascript
+PNGCheck.detectStego(filePath: string): {
+    hasStego: boolean,
+    stegoType: string,
+    confidence: number,
+    details: string[]
+}
+```
+**返回值：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| hasStego | boolean | 是否检测到隐写 |
+| stegoType | string | 可能的隐写类型 |
+| confidence | number | 检测置信度 (0-1) |
+| details | string[] | 详细信息 |
+
+**示例：**
+```javascript
+const result = PNGCheck.detectStego('stego.png');
+
+if (result.hasStego) {
+    console.log('检测到隐写类型:', result.stegoType);
+    console.log('置信度:', result.confidence);
+    console.log('详情:', result.details);
+}
+```
+
+### 获取 PNG 详细信息
+```javascript
+PNGCheck.getInfo(filePath: string): {
+    width: number,
+    height: number,
+    bitDepth: number,
+    colorType: number,
+    compression: string,
+    filter: string,
+    interlace: string,
+    chunkCount: number
+}
+```
+**示例：**
+```javascript
+const info = PNGCheck.getInfo('image.png');
+console.log('尺寸:', info.width, 'x', info.height);
+console.log('位深度:', info.bitDepth);
+console.log('颜色类型:', info.colorType);
+console.log('压缩:', info.compression);
+```
+
+---
+
+## ZIP 文件分析 (新增)
+
+分析 ZIP 文件结构，检测伪加密。
+
+### 分析 ZIP 文件
+```javascript
+ZIPInfo.analyze(filePath: string): {
+    hasPseudoEncryption: boolean,
+    compressionMethod: number,
+    encryptionFlag: number,
+    files: {
+        name: string,
+        compressedSize: number,
+        uncompressedSize: number
+    }[],
+    details: string[]
+}
+```
+**返回值：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| hasPseudoEncryption | boolean | 是否检测到伪加密 |
+| compressionMethod | number | 压缩方法 |
+| encryptionFlag | number | 加密标志 |
+| files | array | 文件列表 |
+| details | string[] | 详细信息 |
+
+**示例：**
+```javascript
+const result = ZIPInfo.analyze('archive.zip');
+
+console.log('有伪加密:', result.hasPseudoEncryption);
+console.log('加密标志:', result.encryptionFlag);
+console.log('文件列表:');
+result.files.forEach(f => {
+    console.log(`  - ${f.name}: ${f.compressedSize} -> ${f.uncompressedSize} bytes`);
+});
+```
+
+### 检测伪加密
+```javascript
+ZIPInfo.detectPseudoEncryption(filePath: string): {
+    hasPseudoEncryption: boolean,
+    details: string[]
+}
+```
+**描述：** 专门检测 ZIP 文件的伪加密（修改全局加密位 9 字节）。
+
+**示例：**
+```javascript
+const result = ZIPInfo.detectPseudoEncryption('archive.zip');
+
+if (result.hasPseudoEncryption) {
+    console.log('检测到伪加密!');
+    console.log('详情:', result.details);
+    
+    // 修复伪加密
+    ZIPInfo.fixPseudoEncryption(filePath, 'fixed.zip');
+}
+```
+
+### 修复伪加密
+```javascript
+ZIPInfo.fixPseudoEncryption(filePath: string, outputPath: string): void
+```
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | 源 ZIP 文件路径 |
+| outputPath | string | 输出文件路径 |
+
+**示例：**
+```javascript
+// 检测并修复伪加密
+const result = ZIPInfo.detectPseudoEncryption('secret.zip');
+if (result.hasPseudoEncryption) {
+    ZIPInfo.fixPseudoEncryption('secret.zip', 'fixed.zip');
+    console.log('伪加密已修复，保存为 fixed.zip');
+}
+```
+
+### 提取文件信息
+```javascript
+ZIPInfo.extractInfo(filePath: string): {
+    fileCount: number,
+    totalSize: number,
+    compressionMethods: number[],
+    comments: string
+}
+```
+**示例：**
+```javascript
+const info = ZIPInfo.extractInfo('archive.zip');
+console.log('文件数量:', info.fileCount);
+console.log('总大小:', info.totalSize);
+console.log('压缩方法:', info.compressionMethods);
+```
+
+### 暴力破解 ZIP 密码
+```javascript
+ZIPInfo.bruteForce(filePath: string, dictionary: string[]): string | null
+```
+**描述：** 使用字典暴力破解 ZIP 密码（仅标准加密，不支持 AES）。
+
+**参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| filePath | string | ZIP 文件路径 |
+| dictionary | string[] | 密码字典 |
+
+**返回值：** 找到的密码，未找到返回 null
+
+**示例：**
+```javascript
+const passwords = ['123456', 'password', 'admin', '12345'];
+const found = ZIPInfo.bruteForce('locked.zip', passwords);
+
+if (found) {
+    console.log('密码是:', found);
+} else {
+    console.log('未找到密码');
+}
+```
+
+---
+
+*最后更新: 2025-02-12*
 
 将编码后的字符串解码为原始文本。
 
@@ -700,7 +1528,24 @@ decode.Vigenere('RIJVS', 'KEY');  // 'HELLO'
 decode.Vigenere('Ppq nj!', 'abc'); // 'Hello World!'
 ```
 
-#### 18. Affine 解码
+#### 18. Playfair 解码
+```javascript
+decode.Playfair(input: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string | 要解码的文本 |
+| key | string | 解密密钥 |
+
+**描述：** 使用 5x5 密钥矩阵进行双字母解密 (自动处理插入的 X)。
+
+**示例：**
+```javascript
+decode.Playfair('DBNVMI', 'KEY');  // 'HELLO'
+decode.Playfair('ZMQMGV', 'KEY');  // 'WORLD'
+```
+
+#### 19. Affine 解码
 ```javascript
 decode.Affine(input: string, options: AffineOptions): string
 ```
@@ -1108,6 +1953,74 @@ encode.DangPu('124');  // '由大工'
 encode.DangPu('678');  // '大王井'
 ```
 
+#### 24. Polybius 坐标编码
+```javascript
+encode.Polybius(str: string, customAlphabet?: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要编码的文本 |
+| customAlphabet | string | 自定义字母表 (可选) |
+
+**描述：** 将字母转换为 5x5 坐标表示 (I 和 J 共享 24 位置)。
+
+**示例：**
+```javascript
+encode.Polybius('HELLO');  // '23 15 32 32 35'
+encode.Polybius('WORLD');  // '53 35 43 32 14'
+```
+
+#### 25. Playfair 密码编码
+```javascript
+encode.Playfair(str: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要编码的文本 |
+| key | string | 密钥 |
+
+**描述：** 使用 5x5 密钥矩阵进行双字母加密 (I 和 J 共享位置)。
+
+**示例：**
+```javascript
+encode.Playfair('HELLO', 'KEY');  // 'DBNVMI'
+encode.Playfair('WORLD', 'KEY');  // 'ZMQMGV'
+```
+
+#### 26. XOR 加密
+```javascript
+XOR(input: string | Buffer, key: number | Buffer): string | Buffer
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string \| Buffer | 要加密的文本或缓冲区 |
+| key | number \| Buffer | 单字节密钥或密钥缓冲区 |
+
+**描述：** 对输入进行 XOR 加密/解密。
+
+**示例：**
+```javascript
+XOR('Hello', 0x42);              // XOR加密
+XOR(Buffer.from([1,2,3]), 0xFF); // XOR加密缓冲区
+XOR(result, 0x42);               // 再次XOR解密
+```
+
+#### 26. XOR 爆破
+```javascript
+bruteXOR(input: string | Buffer, keyLength?: number): { key: Buffer; result: string }[]
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| input | string \| Buffer | 要破解的密文 |
+| keyLength | number | 密钥长度 (默认 1) |
+
+**描述：** 遍历所有可能的密钥，找出可读的结果。
+
+**示例：**
+```javascript
+bruteXOR('密文', 1);  // 单字节爆破，返回所有可读结果
+```
+
 ---
 
 ## 示例代码
@@ -1343,6 +2256,9 @@ runTests().catch(err => {
 | Exponential | ❌ | ✅ | ✅ | decode-only | 需加密内容 |
 | MD5 | ✅ | ❌ | ✅ | encode-only | 单向哈希 |
 | SimpleSub | ✅ | ✅ | ✅ | normal | key: 替换表 |
+| Polybius | ✅ | ✅ | ✅ | normal | I/J共享位置 |
+| Playfair | ✅ | ✅ | ✅ | normal | key: string, I/J共享位置 |
+| XOR | ✅ | ❌ | ✅ | tool | 独立工具模块 |
 
 #### 测试模式说明
 
@@ -1350,6 +2266,7 @@ runTests().catch(err => {
 - **encode-only**: 只测试 encode 功能 (如 MD5)
 - **decode-only**: 只测试 decode 功能 (如 Poem, YuFoLunChan, ZaHuoPu, Exponential)
 - **bf-only**: Brainfuck 专用，检测编码结果是否为有效 Brainfuck 代码
+- **tool**: 独立工具模块 (如 XOR)，直接从模块调用
 
 ### 测试覆盖要求
 
@@ -1395,4 +2312,90 @@ CTF-UTILS 单独测试报告
   - 输入格式不符合加密类型要求
   - 加密算法本身的行为特性（如大小写变化）
   - 需要特殊参数才能完整测试
-- ⚠️ **跳过**：某些测试因配置了 `skipTest` 而跳过，通常是需要额外参数的复杂类型
+
+---
+
+## 辅助工具
+
+### 1. 频率分析工具
+
+```javascript
+const { analyzeFrequency, compareWithEnglish, calculateIC, detectLanguage } = require('./lib/crypto-types/FrequencyAnalysis.js');
+
+// 分析字符频率
+const analysis = analyzeFrequency('Hello World');
+console.log(analysis.frequencies);
+
+// 计算重合指数
+const ic = calculateIC('Hello World');
+console.log('重合指数:', ic);
+
+// 检测语言
+const lang = detectLanguage('Hello World');
+console.log('语言:', lang.language, '置信度:', lang.confidence);
+```
+
+### 2. 字典生成工具
+
+```javascript
+const { generateDictionary, generateDateFormats, generateKeyboardPaths, generateLeetSpeak } = require('./lib/crypto-types/DictionaryGenerator.js');
+
+// 生成基本字典
+const dict = generateDictionary({ length: 2, charset: 'ab' });
+
+// 生成日期格式
+const dates = generateDateFormats(2023, 2024, ['YYYY-MM-DD']);
+
+// 生成键盘路径
+const keyboardPaths = generateKeyboardPaths('qwerty', 3);
+
+// 生成 Leet Speak 变体
+const leetWords = generateLeetSpeak(['password']);
+```
+
+### 3. LSB 隐写工具
+
+```javascript
+const { extractLSB, detectSteganography } = require('./lib/crypto-types/LSBExtract.js');
+
+// 提取 LSB 信息
+const hiddenData = extractLSB('image.png', { bitPlane: 0, outputFormat: 'text' });
+
+// 检测隐写
+const detection = detectSteganography('image.png');
+console.log('隐写检测:', detection.detected, '置信度:', detection.confidence);
+```
+
+### 4. PNG 检查工具
+
+```javascript
+const { checkPNG, getPNGInfo, detectPNGSteganography } = require('./lib/crypto-types/PNGCheck.js');
+
+// 检查 PNG 文件
+const pngInfo = checkPNG('image.png');
+console.log('PNG 有效:', pngInfo.valid);
+console.log('图像尺寸:', pngInfo.width, 'x', pngInfo.height);
+
+// 获取详细信息
+const infoString = getPNGInfo('image.png');
+console.log(infoString);
+
+// 检测 PNG 隐写
+const stegDetection = detectPNGSteganography('image.png');
+```
+
+### 5. ZIP 信息工具
+
+```javascript
+const { analyzeZIP, getZIPInfo } = require('./lib/crypto-types/ZIPInfo.js');
+
+// 分析 ZIP 文件
+const zipInfo = analyzeZIP('file.zip');
+console.log('ZIP 有效:', zipInfo.valid);
+console.log('文件数量:', zipInfo.totalFiles);
+console.log('伪加密:', zipInfo.isPseudoEncrypted);
+
+// 获取详细信息
+const zipInfoString = getZIPInfo('file.zip');
+console.log(zipInfoString);
+```

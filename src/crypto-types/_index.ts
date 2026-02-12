@@ -22,6 +22,14 @@ import * as SimpleSub from "./SimpleSub";
 import * as Unicode from "./Unicode";
 import * as URL from "./URL";
 import * as Vigenere from "./Vigenere";
+import * as Polybius from "./Polybius";
+import * as Playfair from "./Playfair";
+import * as FrequencyAnalysis from "./FrequencyAnalysis";
+import * as DictionaryGenerator from "./DictionaryGenerator";
+import * as LSBExtract from "./LSBExtract";
+import * as PNGCheck from "./PNGCheck";
+import * as ZIPInfo from "./ZIPInfo";
+import * as XOR from "./XOR";
 import * as YuFoLunChan from "./YuFoLunChan";
 import * as ZaHuoPu from "./ZaHuoPu";
 
@@ -50,12 +58,20 @@ export {
     Morse,
     OCT,
     Poem,
+    Polybius,
+    Playfair,
+    FrequencyAnalysis,
+    DictionaryGenerator,
+    LSBExtract,
+    PNGCheck,
+    ZIPInfo,
     RailFence,
     ROT,
     SimpleSub,
     Unicode,
     URL,
     Vigenere,
+    XOR,
     YuFoLunChan,
     ZaHuoPu
 };

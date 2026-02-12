@@ -1,7 +1,7 @@
 {
   "name": "ctf-utils",
-  "version": "0.2.1",
-  "description": "A CTF tool",
+  "version": "0.3.0",
+  "description": "A powerful CTF toolkit for encoding, decoding, encryption, decryption, and steganography analysis with 45+ methods",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -21,6 +21,18 @@
   ],
   "author": "heyauri",
   "license": "MIT",
+  "keywords": [
+    "ctf",
+    "crypto",
+    "encoding",
+    "decryption",
+    "steganography",
+    "cipher",
+    "cryptography",
+    "security",
+    "hacking",
+    "capture-the-flag"
+  ],
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^14.0.3",
@@ -33,5 +45,9 @@
     "@types/lodash": "^4.17.23",
     "@types/node": "^25.2.1",
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heyauri/ctf-utils"
   }
 }
