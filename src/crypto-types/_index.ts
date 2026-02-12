@@ -30,6 +30,11 @@ import * as LSBExtract from "./LSBExtract";
 import * as PNGCheck from "./PNGCheck";
 import * as ZIPInfo from "./ZIPInfo";
 import * as XOR from "./XOR";
+import * as AES from "./AES";
+import * as JQ from "./JQ";
+import * as Pinyin from "./Pinyin";
+import * as Wubi from "./Wubi";
+import * as AudioSteganography from "./AudioSteganography";
 import * as YuFoLunChan from "./YuFoLunChan";
 import * as ZaHuoPu from "./ZaHuoPu";
 
@@ -72,6 +77,11 @@ export {
     URL,
     Vigenere,
     XOR,
+    AES,
+    JQ,
+    Pinyin,
+    Wubi,
+    AudioSteganography,
     YuFoLunChan,
     ZaHuoPu
 };

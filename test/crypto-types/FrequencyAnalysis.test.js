@@ -12,7 +12,14 @@ const tests = [
     "The quick brown fox jumps over the lazy dog.",
     "CTF{ThisIsATestFlag}",
     "AAAAAAAAAAAAAAAAAAAA",
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "这是一个中文测试文本，用于频率分析",
+    "Hello World, 这是一个混合语言测试",
+    "1234567890!@#$%^&*()",
+    "",
+    "A",
+    "CTF{FrequencyAnalysisIsUsefulForCrypto}",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 ];
 
 async function runTests() {

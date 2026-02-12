@@ -2,6 +2,7 @@ import { decode, decodeSync } from "./decode";
 import { encode, encodeSync } from "./encode";
 import { detect, detectSync, detectAll, detectAllSync } from "./detect";
 import * as Utils from "./utils/Utils";
+import * as cryptoTypes from "./crypto-types/_index";
 import util from "util";
 
 class CTFUtils {
@@ -113,3 +114,4 @@ class CTFUtils {
 }
 
 export { decode, encode, detect, decodeSync, encodeSync, detectSync, detectAll, detectAllSync, Utils, CTFUtils };
+export * from "./crypto-types/_index";

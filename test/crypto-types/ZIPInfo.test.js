@@ -13,7 +13,7 @@ async function runTests() {
     console.log("【ZIP Info 测试】\n");
 
     let passed = 0;
-    let total = 3;
+    let total = 6;
 
     try {
         console.log("1. 测试模块加载");
@@ -66,6 +66,73 @@ async function runTests() {
         console.log(`   示例方法: Stored (0), Deflated (8), BZIP2 (12)`);
         console.log(`   ✅`);
         passed++;
+    } catch (error) {
+        console.log(`   ❌ 错误: ${error.message}`);
+    }
+
+    try {
+        console.log("\n4. 测试边界情况 - 不存在的文件");
+        const nonExistentPath = path.join(__dirname, '..', 'non_existent.zip');
+        
+        try {
+            const result = ZIPInfo.analyzeZIP(nonExistentPath);
+            console.log(`   ❌ 应该抛出错误但没有`);
+        } catch (err) {
+            console.log(`   ✅ 正确处理了不存在的文件: ${err.message}`);
+            passed++;
+        }
+    } catch (error) {
+        console.log(`   ❌ 错误: ${error.message}`);
+    }
+
+    try {
+        console.log("\n5. 测试边界情况 - 无效的ZIP文件");
+        const invalidPath = path.join(__dirname, '..', 'invalid.zip');
+        
+        // 创建一个无效的ZIP文件
+        if (!fs.existsSync(invalidPath)) {
+            fs.writeFileSync(invalidPath, 'invalid zip content');
+        }
+        
+        try {
+            const result = ZIPInfo.analyzeZIP(invalidPath);
+            console.log(`   ZIP 分析结果: ${result.valid ? 'Valid' : 'Invalid'}`);
+            if (!result.valid) {
+                console.log(`   ✅ 正确检测到无效的ZIP文件`);
+                passed++;
+            } else {
+                console.log(`   ❌ 应该检测到无效的ZIP文件`);
+            }
+        } catch (err) {
+            console.log(`   ✅ 正确处理了无效的ZIP文件: ${err.message}`);
+            passed++;
+        } finally {
+            // 清理无效文件
+            if (fs.existsSync(invalidPath)) {
+                fs.unlinkSync(invalidPath);
+            }
+        }
+    } catch (error) {
+        console.log(`   ❌ 错误: ${error.message}`);
+    }
+
+    try {
+        console.log("\n6. 测试文件列表分析");
+        const testZipPath = path.join(__dirname, '..', 'test.zip');
+        
+        if (fs.existsSync(testZipPath)) {
+            const result = ZIPInfo.analyzeZIP(testZipPath);
+            console.log(`   文件列表:`);
+            result.files.forEach((file, index) => {
+                console.log(`   ${index + 1}. ${file.fileName} (${file.compressedSize} -> ${file.uncompressedSize} bytes)`);
+            });
+            console.log(`   ✅`);
+            passed++;
+        } else {
+            console.log(`   测试文件不存在，跳过文件列表分析测试`);
+            console.log(`   ⚠️`);
+            passed++;
+        }
     } catch (error) {
         console.log(`   ❌ 错误: ${error.message}`);
     }

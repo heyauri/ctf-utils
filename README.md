@@ -4,7 +4,7 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 
 ## Features
 
-- **45+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
+- **50+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
@@ -145,6 +145,9 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | URL | ✅ | ✅ | ✅ | URL encoding |
 | HTML | ✅ | ✅ | ✅ | HTML entities |
 | Unicode | ✅ | ✅ | ✅ | Unicode escape sequences |
+| JQ | ✅ | ✅ | ✅ | Jothello's Quotes encoding |
+| Pinyin | ✅ | ✅ | ✅ | Chinese pinyin encoding |
+| Wubi | ✅ | ✅ | ✅ | Chinese wubi encoding |
 
 ### Brainfuck/Ook! Family
 
@@ -177,6 +180,7 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | XOR | ✅ | XOR encryption/brute-force |
 | FrequencyAnalysis | | Character frequency analysis |
 | DictionaryGenerator | | Password dictionary generation |
+| AES/DES | | AES-128/192/256 and DES encryption |
 
 ### File Analysis Tools
 
@@ -186,6 +190,7 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | PNGCheck | PNG structure analysis & steganography detection |
 | ZIPInfo | ZIP file analysis & pseudo-encryption detection |
 | LSBExtract | Least Significant Bit steganography extraction |
+| AudioSteganography | Audio file steganography analysis |
 
 ### Bacon Cipher
 
