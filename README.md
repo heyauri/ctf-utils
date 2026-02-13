@@ -11,7 +11,21 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 - **CLI tool** - Command-line interface for quick operations
 - **File analysis tools** - LSB steganography, PNG structure analysis, ZIP pseudo-encryption detection
 - **RSA solver** - Advanced RSA cryptography tools with support for key generation, encryption/decryption, and common attacks
-- **Zero external dependencies** - Only core crypto and encoding modules
+- **Forensics tools** - File analysis and steganography detection utilities
+- **Exploitation tools** - Binary vulnerability exploitation utilities
+- **Math utilities** - Advanced mathematical functions for cryptography
+- **Well-structured documentation** - Clear separation of documentation responsibilities
+
+## Documentation Structure
+
+The project documentation is organized into the following files:
+
+- **README.md** - General project overview, installation, and quick start guide
+- **doc/README-zh.md** - Chinese version of the README
+- **doc/CryptoTypes.md** - Detailed documentation for cryptographic types and encoding methods
+- **doc/CryptoTypes-zh.md** - Chinese version of CryptoTypes documentation
+- **doc/Solver.md** - Documentation for solver modules (RSA, Forensics, Exploitation, Math)
+- **doc/Solver-zh.md** - Chinese version of Solver documentation
 
 ## Installation
 
@@ -183,6 +197,8 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | DictionaryGenerator | | Password dictionary generation |
 | AES/DES | | AES-128/192/256 and DES encryption |
 
+## Solver Modules
+
 ### RSA Solver
 
 The RSA solver provides comprehensive tools for RSA cryptography challenges, including key generation, encryption/decryption, and common attacks.
@@ -193,39 +209,6 @@ The RSA solver provides comprehensive tools for RSA cryptography challenges, inc
 - **Encryption/decryption** - Basic RSA encryption and decryption with CRT optimization
 - **Common attacks** - Implementations of various RSA attack methods
 - **Utility functions** - Prime detection, key strength evaluation, and more
-
-#### RSA Usage Examples
-
-```javascript
-const { solver } = require("ctf-utils");
-
-// Generate RSA key pair
-const keyPair = await solver.RSA.RSASolver.generateKeyPair(512);
-console.log(keyPair.publicKey);
-console.log(keyPair.privateKey);
-
-// Encrypt and decrypt message
-const message = "Hello, RSA!";
-const encrypted = solver.RSA.RSASolver.encrypt(message, keyPair.publicKey);
-const decrypted = solver.RSA.RSASolver.decrypt(encrypted, keyPair.privateKey);
-console.log(decrypted); // "Hello, RSA!"
-
-// Evaluate key strength
-const strength = solver.RSA.RSASolver.evaluateKeyStrength(keyPair.publicKey.n);
-console.log(strength); // { keySize: 512, strength: "Weak" }
-
-// Run small exponent attack (e=3)
-const n = 3233n; // 61 * 53
-const e = 3n;
-const ciphertext = 2790n;
-const plaintext = solver.RSA.attacks.smallExponent(ciphertext, { n, e });
-console.log(plaintext); // 42n
-
-// Run Coppersmith attack for small roots
-const polynomial = (x) => x - 42n;
-const root = solver.RSA.attacks.coppersmith(n, polynomial, 0.5);
-console.log(root); // 42n
-```
 
 #### Supported RSA Attacks
 
@@ -243,7 +226,7 @@ console.log(root); // 42n
 | privateKeyFromFactors | Calculate private key from prime factors |
 | trialDivision | Trial division for small factors |
 
-### File Analysis Tools
+### Forensics Tools
 
 | Tool | Description |
 |------|-------------|
@@ -253,11 +236,25 @@ console.log(root); // 42n
 | LSBExtract | Least Significant Bit steganography extraction |
 | AudioSteganography | Audio file steganography analysis |
 
-### Bacon Cipher
+### Exploitation Tools
 
-| Cipher | Detect | Decode | Encode | Description |
-|--------|--------|--------|--------|-------------|
-| Bacon | ✅ | ✅ | ✅ | Bacon's cipher (A/B or 0/1) |
+| Tool | Description |
+|------|-------------|
+| ROP | Return-oriented programming chain generation |
+| BufferOverflow | Buffer overflow exploitation utilities |
+| Shellcode | Shellcode generation for various architectures |
+| FormatString | Format string vulnerability exploitation |
+| HeapOverflow | Heap overflow exploitation utilities |
+
+### Math Utilities
+
+| Utility | Description |
+|---------|-------------|
+| Number Theory | GCD, LCM, extended Euclidean algorithm, modular inverse, etc. |
+| Linear Algebra | Matrix operations, determinants, inverses |
+| Combinatorics | Permutations, combinations, subsets |
+| Cryptographic Math | Primality testing, modular exponentiation, discrete logarithms |
+| Factorization | Pollard's Rho algorithm, trial division |
 
 ## API Reference
 
@@ -301,59 +298,28 @@ await new CTFUtils("HELLO", "KEY")
     .val();
 ```
 
-### File Analysis Examples
+### Solver Modules Usage
 
 ```javascript
-const { BinaryFile, PNGCheck, ZIPInfo, LSBExtract } = require("ctf-utils");
-const fs = require("fs");
+const { solver } = require("ctf-utils");
 
-// Detect file type
-const pngBuffer = fs.readFileSync("image.png");
-const types = BinaryFile.detect(pngBuffer);
-console.log(types); // ['png']
+// RSA solver
+const keyPair = await solver.RSA.generateKeyPair(2048);
+const encrypted = solver.RSA.encrypt(65n, keyPair.publicKey);
+const decrypted = solver.RSA.decrypt(encrypted, keyPair.privateKey);
 
-// Check PNG structure
-const pngInfo = PNGCheck.check("image.png");
-console.log(pngInfo);
+// Forensics tools
+const fileType = solver.Forensics.BinaryFile.detect(Buffer.from([0x89, 0x50, 0x4E, 0x47]));
+const pngInfo = solver.Forensics.PNGCheck.check("image.png");
 
-// Analyze ZIP for pseudo-encryption
-const zipInfo = ZIPInfo.analyze("file.zip");
-console.log(zipInfo.hasPseudoEncryption);
+// Exploitation tools
+const ropChain = solver.Exploitation.ROP.generateChain([
+  { address: 0xdeadbeef, args: [0x1234, 0x5678] }
+]);
 
-// Extract LSB hidden data
-const hiddenData = LSBExtract.extract("stego.png", 3, "LSB");
-console.log(hiddenData);
-```
-
-### Frequency Analysis
-
-```javascript
-const { FrequencyAnalysis } = require("ctf-utils");
-
-// Analyze character frequency
-const result = FrequencyAnalysis.analyze("Hello World");
-console.log(result.letters['H']); // Frequency of 'H'
-console.log(result.ic);           // Index of Coincidence
-
-// Find best XOR key
-const xorResults = FrequencyAnalysis.bestXORKey("encrypted data");
-console.log(xorResults[0]); // Most likely key and result
-```
-
-### Dictionary Generation
-
-```javascript
-const { DictionaryGenerator } = require("ctf-utils");
-
-// Generate keyboard pattern passwords
-const patterns = DictionaryGenerator.keyboardPatterns("qwerty", 3);
-
-// Generate date-based passwords
-const dates = DictionaryGenerator.datePatterns(2020, 2025);
-
-// Generate combination dictionary
-const combos = DictionaryGenerator.combine(["password", "123"], ["!", "@"]);
-// ['password', '123', 'password!', 'password@', '123!', '123@']
+// Math utilities
+const gcd = solver.Math.gcd(12345n, 67890n);
+const factors = solver.Math.pollardsRho(123456789n);
 ```
 
 ## Development
@@ -368,6 +334,16 @@ pnpm build
 # Run tests
 node test/run-all-tests.js
 ```
+
+## Documentation
+
+For more detailed documentation, please refer to the following files:
+
+- **doc/CryptoTypes.md** - Detailed documentation for cryptographic types and encoding methods
+- **doc/CryptoTypes-zh.md** - Chinese version of CryptoTypes documentation
+- **doc/Solver.md** - Documentation for solver modules (RSA, Forensics, Exploitation, Math)
+- **doc/Solver-zh.md** - Chinese version of Solver documentation
+- **doc/README-zh.md** - Chinese version of this README
 
 ## Warning
 

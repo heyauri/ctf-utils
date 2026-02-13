@@ -1,5 +1,6 @@
 const ctf = require('../../lib/index.js');
-const { CTFUtils, AudioSteganography } = ctf;
+const { CTFUtils, solver } = ctf;
+const { AudioSteganography } = solver.Forensics;
 
 const TIMEOUT_MS = 5000;
 

@@ -1,4 +1,5 @@
-const LSBExtract = require('../../lib/crypto-types/LSBExtract.js');
+const ctf = require('../../lib/index.js');
+const { LSBExtract } = ctf.solver.Forensics;
 const fs = require('fs');
 const path = require('path');
 

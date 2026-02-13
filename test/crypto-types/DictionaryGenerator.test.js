@@ -1,4 +1,5 @@
-const DictionaryGenerator = require('../../lib/crypto-types/DictionaryGenerator.js');
+const ctf = require('../../lib/index.js');
+const { DictionaryGenerator } = ctf.solver.Utils;
 
 const TIMEOUT_MS = 5000;
 

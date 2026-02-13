@@ -1,4 +1,5 @@
-const FrequencyAnalysis = require('../../lib/crypto-types/FrequencyAnalysis.js');
+const ctf = require('../../lib/index.js');
+const { FrequencyAnalysis } = ctf.solver.Analysis;
 
 const TIMEOUT_MS = 5000;
 

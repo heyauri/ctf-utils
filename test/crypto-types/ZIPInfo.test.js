@@ -1,4 +1,5 @@
-const ZIPInfo = require('../../lib/crypto-types/ZIPInfo.js');
+const ctf = require('../../lib/index.js');
+const { ZIPInfo } = ctf.solver.Forensics;
 const fs = require('fs');
 const path = require('path');
 

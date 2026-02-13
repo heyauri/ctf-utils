@@ -112,7 +112,7 @@ export class RSASolver {
       case 'hastadBroadcast':
         return attacks.hastadBroadcast(args[0], args[1]);
       case 'franklinReiter':
-        return attacks.franklinReiter(args[0], args[1], args[2], args[3]);
+        return attacks.franklinReiter(args[0], args[1], args[2], args[3], args[4]);
       case 'bonehDurfee':
         return attacks.bonehDurfee(args[0]);
       case 'coppersmith':

@@ -53,9 +53,58 @@ const invertBuffer = (buf: Buffer): Buffer => {
     return newBuf;
 };
 
+/**
+ * 执行函数并返回Promise，支持同步和异步函数
+ * @param fn 要执行的函数
+ * @param timeout 超时时间（毫秒），默认无超时
+ * @returns Promise<T>
+ */
+async function asyncExecute<T>(fn: Function, timeout?: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        let timeoutId: NodeJS.Timeout | undefined;
+        
+        // 如果设置了超时，创建超时定时器
+        if (timeout) {
+            timeoutId = setTimeout(() => {
+                reject(new Error(`Execution timed out after ${timeout}ms`));
+            }, timeout);
+        }
+        
+        // 执行函数
+        const execute = async () => {
+            try {
+                const result = await fn();
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                resolve(result);
+            } catch (error) {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                reject(error);
+            }
+        };
+        
+        execute();
+    });
+}
+
+/**
+ * 带超时控制的函数执行器，适用于solver模块的方法
+ * @param fn 要执行的函数
+ * @param timeout 超时时间（毫秒），默认30000ms
+ * @returns Promise<T>
+ */
+function executeWithTimeout<T>(fn: Function, timeout: number = 30000): Promise<T> {
+    return asyncExecute(fn, timeout);
+}
+
 export {
     invertNumber,
     invertBuffer,
     stringToCharCodes,
-    charCodesToString
+    charCodesToString,
+    asyncExecute,
+    executeWithTimeout
 };
