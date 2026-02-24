@@ -474,6 +474,89 @@ detect.XOR('Hello');         // true
 detect.XOR(Buffer.from([1,2,3]));  // true
 ```
 
+#### 25. ADFGVX 密码检测
+```javascript
+detect.ADFGVX(str: string): boolean
+```
+**示例：**
+```javascript
+detect.ADFGVX('ADVDFA DGAVV');  // true
+detect.ADFGVX('Hello');         // false
+```
+
+#### 26. AES 密文检测
+```javascript
+detect.AES(str: string): boolean
+```
+**示例：**
+```javascript
+detect.AES('U2FsdGVkX1+==');  // true (OpenSSL格式)
+detect.AES('Salted__');        // true (OpenSSL盐值前缀)
+detect.AES('Hello');            // false
+```
+
+#### 27. Brainfuck 代码检测
+```javascript
+detect.Brainfuck(str: string): boolean
+```
+**示例：**
+```javascript
+detect.Brainfuck('++++++++++[>+++++++>++++++++++>+++<<<-]>++.>+.+++++++..+++.>++.');  // true
+detect.Brainfuck('Hello');     // false
+```
+
+#### 28. HTML 实体检测
+```javascript
+detect.HTML(str: string): boolean
+```
+**示例：**
+```javascript
+detect.HTML('&lt;div&gt;');    // true
+detect.HTML('&#60;div&#62;');   // true
+detect.HTML('Hello');          // false
+```
+
+#### 29. JQ 表达式检测
+```javascript
+detect.JQ(str: string): boolean
+```
+**示例：**
+```javascript
+detect.JQ('.foo');              // true
+detect.JQ('.[]');               // true
+detect.JQ('Hello');             // false
+```
+
+#### 30. 五笔字型检测
+```javascript
+detect.Wubi(str: string): boolean
+```
+**示例：**
+```javascript
+detect.Wubi('gggk');            // true (五笔编码)
+detect.Wubi('hello');           // false
+```
+
+#### 31. 拼音检测
+```javascript
+detect.Pinyin(str: string): boolean
+```
+**示例：**
+```javascript
+detect.Pinyin('ni hao');        // true (带声调: nǐ hǎo)
+detect.Pinyin('nihao');         // false
+```
+
+#### 32. 简单替换密码检测
+```javascript
+detect.SimpleSub(str: string): boolean
+```
+**示例：**
+```javascript
+detect.SimpleSub('Khoor');      // true (可能是简单替换)
+detect.SimpleSub('Hello');      // false
+```
+
 #### Playfair 密码检测
 ```javascript
 detect.Playfair(str: string): boolean
@@ -1693,6 +1776,119 @@ decode.YuFoLunChan(str: string): string
 decode.YuFoLunChan('内容由加密');  // 解密后的明文
 ```
 
+#### 29. ADFGVX 密码解码
+```javascript
+decode.ADFGVX(str: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要解密的密文 |
+| key | string | 密钥 |
+
+**描述：** ADFGVX 密码是一种二战时期德国使用的替换密码，结合了 Polybius 方阵和列置换。
+
+**示例：**
+```javascript
+decode.ADVDFA('DGAVV', 'KEY');  // 解密结果
+```
+
+#### 30. AES 密文解码
+```javascript
+decode.AES(str: string, password: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要解密的密文 (OpenSSL格式) |
+| password | string | 解密密码 |
+
+**描述：** 解密 OpenSSL 格式的 AES 加密数据 (AES-256-CBC)。
+
+**示例：**
+```javascript
+decode.AES('U2FsdGVkX1+...', 'password');  // 解密结果
+```
+
+#### 31. Brainfuck 代码解码
+```javascript
+decode.Brainfuck(str: string): string
+```
+**描述：** 解析 Brainfuck 代码并返回对应的输出。
+
+**示例：**
+```javascript
+decode.Brainfuck('++++++++++[>+++++++>++++++++++>+++<<<-]>++.>+.+++++++..+++.>++.');
+// 'Hello World'
+```
+
+#### 32. HTML 实体解码
+```javascript
+decode.HTML(str: string): string
+```
+**描述：** 解码 HTML 实体编码 (支持命名实体、十进制、十六进制)。
+
+**示例：**
+```javascript
+decode.HTML('&lt;div&gt;');     // '<div>'
+decode.HTML('&#60;div&#62;');    // '<div>'
+decode.HTML('&#x3C;div&#x3E;'); // '<div>'
+```
+
+#### 33. JQ 表达式解码
+```javascript
+decode.JQ(json: string, query: string): any
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| json | string | JSON 字符串 |
+| query | string | JQ 查询表达式 |
+
+**描述：** 使用 JQ 表达式解析 JSON 数据。
+
+**示例：**
+```javascript
+decode.JQ('{"foo": "bar"}', '.foo');  // 'bar'
+decode.JQ('[1,2,3]', '.[]');          // [1, 2, 3]
+```
+
+#### 34. 五笔字型解码
+```javascript
+decode.Wubi(str: string): string
+```
+**描述：** 将五笔编码转换为对应汉字 (需要五笔编码表)。
+
+**示例：**
+```javascript
+decode.Wubi('gggk');  // '木'
+```
+
+#### 35. 拼音解码
+```javascript
+decode.Pinyin(str: string): string
+```
+**描述：** 将带声调的拼音转换为汉字。
+
+**示例：**
+```javascript
+decode.Pinyin('ni3 hao3');  // '你好'
+decode.Pinyin('zhong1 guo2');  // '中国'
+```
+
+#### 36. 简单替换密码解码
+```javascript
+decode.SimpleSub(str: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要解密的密文 |
+| key | string | 替换密钥 |
+
+**描述：** 使用简单替换密码解密。
+
+**示例：**
+```javascript
+decode.SimpleSub('Khoor', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');  // 'Hello'
+```
+
 ---
 
 ## encode 方法
@@ -1996,6 +2192,116 @@ XOR(input: string | Buffer, key: number | Buffer): string | Buffer
 XOR('Hello', 0x42);              // XOR加密
 XOR(Buffer.from([1,2,3]), 0xFF); // XOR加密缓冲区
 XOR(result, 0x42);               // 再次XOR解密
+```
+
+#### 27. ADFGVX 密码编码
+```javascript
+encode.ADFGVX(str: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要加密的明文 |
+| key | string | 密钥 |
+
+**描述：** ADFGVX 密码是一种二战时期德国使用的替换密码，结合了 Polybius 方阵和列置换。
+
+**示例：**
+```javascript
+encode.ADFGVX('HELLO', 'KEY');  // 'ADVDFA DGAVV'
+```
+
+#### 28. AES 加密
+```javascript
+encode.AES(str: string, password: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要加密的明文 |
+| password | string | 加密密码 |
+
+**描述：** 使用 OpenSSL 格式的 AES-256-CBC 加密数据。
+
+**示例：**
+```javascript
+encode.AES('Hello', 'password');  // 'U2FsdGVkX1+...'
+```
+
+#### 29. Brainfuck 代码生成
+```javascript
+encode.Brainfuck(str: string): string
+```
+**描述：** 将字符串转换为 Brainfuck 代码。
+
+**示例：**
+```javascript
+encode.Brainfuck('Hi');  // 生成 Brainfuck 代码
+```
+
+#### 30. HTML 实体编码
+```javascript
+encode.HTML(str: string): string
+```
+**描述：** 将字符串编码为 HTML 实体 (支持命名实体、十进制、十六进制)。
+
+**示例：**
+```javascript
+encode.HTML('<div>');     // '&lt;div&gt;'
+encode.HTML('<div>', 'decimal');    // '&#60;div&#62;'
+encode.HTML('<div>', 'hexadecimal'); // '&#x3C;div&#x3E;'
+```
+
+#### 31. JQ 表达式编码
+```javascript
+encode.JQ(data: any, query: string): any
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| data | any | 要处理的数据 (对象或数组) |
+| query | string | JQ 查询表达式 |
+
+**描述：** 使用 JQ 表达式处理数据。
+
+**示例：**
+```javascript
+encode.JQ({foo: 'bar'}, '.foo');  // 'bar'
+```
+
+#### 32. 五笔字型编码
+```javascript
+encode.Wubi(str: string): string
+```
+**描述：** 将汉字转换为五笔编码。
+
+**示例：**
+```javascript
+encode.Wubi('木');  // 'ssss' 或 'gggk' (取决于具体实现)
+```
+
+#### 33. 拼音编码
+```javascript
+encode.Pinyin(str: string): string
+```
+**描述：** 将汉字转换为带声调的拼音。
+
+**示例：**
+```javascript
+encode.Pinyin('你好');  // 'nǐ hǎo'
+```
+
+#### 34. 简单替换密码编码
+```javascript
+encode.SimpleSub(str: string, key: string): string
+```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| str | string | 要加密的明文 |
+| key | string | 替换密钥 |
+
+**描述：** 使用简单替换密码加密。
+
+**示例：**
+```javascript
+encode.SimpleSub('Hello', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');  // 'Khoor'
 ```
 
 #### 26. XOR 爆破

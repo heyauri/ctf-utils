@@ -1,30 +1,25 @@
-# Solver Modules Documentation
+# Solver Module Documentation
 
 ## Overview
 
-The solver modules provide advanced, optimized tools for solving CTF challenges, including cryptographic attacks, forensics analysis, binary exploitation, and mathematical utilities. All modules have been optimized for performance, especially for large integer operations and cryptographic attacks.
-
-## Key Optimizations
-
-- **Parallel processing** - Some operations use parallel execution for faster results
-- **Memory efficiency** - Optimized memory usage for handling large integers and complex operations
-- **Algorithm improvements** - Enhanced implementations of cryptographic algorithms and attacks
-- **Error handling** - Robust error handling for edge cases and large inputs
-- **Performance metrics** - Some operations include execution time measurements for debugging
+The Solver module provides advanced tools for solving CTF challenges, including cryptographic attacks, forensics analysis, binary exploitation, and mathematical utilities.
 
 ## Table of Contents
 - [Crypto Module](#crypto-module)
+  - [RSA Submodule](#rsa-submodule)
+  - [Hash Submodule](#hash-submodule)
+  - [Lattice Submodule](#lattice-submodule)
 - [Forensics Module](#forensics-module)
 - [Exploitation Module](#exploitation-module)
 - [Math Module](#math-module)
 - [Web Module](#web-module)
-- [ReverseEngineering Module](#reverseengineering-module)
+- [Reverse Engineering Module](#reverse-engineering-module)
 - [Analysis Module](#analysis-module)
 - [Utils Module](#utils-module)
 
 ## Crypto Module
 
-The Crypto module provides comprehensive tools for cryptographic challenges, including RSA cryptography and hash attacks.
+The Crypto module provides comprehensive cryptographic challenge tools, including RSA cryptography, hash attacks, and lattice-based cryptography attacks.
 
 ### RSA Submodule
 
@@ -32,12 +27,12 @@ The RSA submodule provides tools for RSA cryptography challenges, including key 
 
 #### RSA Features
 
-- **Key generation** - Generate RSA key pairs with configurable bit lengths
-- **Encryption/decryption** - Basic RSA encryption and decryption with CRT optimization
-- **Common attacks** - Implementations of various RSA attack methods
-- **Utility functions** - Prime detection, key strength evaluation, and more
+- **Key Generation** - Generate RSA key pairs with configurable bit length
+- **Encryption/Decryption** - Basic RSA encryption and decryption with CRT optimization
+- **Common Attacks** - Implementation of various RSA attack methods
+- **Utility Functions** - Prime detection, key strength evaluation, GCD, modular inverse, etc.
 
-#### RSA Usage Examples
+#### RSA Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -64,7 +59,7 @@ const ciphertext = 2790n;
 const plaintext = solver.Crypto.RSA.attacks.smallExponent(ciphertext, { n, e });
 console.log(plaintext); // 42n
 
-// Run Coppersmith attack for small roots
+// Run Coppersmith small root attack
 const polynomial = (x) => x - 42n;
 const root = solver.Crypto.RSA.attacks.coppersmith(n, polynomial, 0.5);
 console.log(root); // 42n
@@ -76,26 +71,26 @@ console.log(root); // 42n
 |--------|-------------|
 | smallExponent | Small exponent attack (e=3) |
 | commonModulus | Common modulus attack with two different exponents |
-| wiener | Wiener's attack for small private exponent |
-| hastadBroadcast | Hastad's broadcast attack with multiple public keys |
+| wiener | Wiener small private key attack |
+| hastadBroadcast | Hastad broadcast attack using multiple public keys |
 | franklinReiter | Franklin-Reiter related message attack |
-| franklinReiterImproved | Improved Franklin-Reiter attack for any e |
-| bonehDurfee | Boneh-Durfee attack for small private exponent |
-| coppersmith | Coppersmith's attack for small roots of polynomials |
-| coppersmithFactor | Coppersmith's attack for factoring with partial information |
-| rsaCrtFaultAttack | RSA-CRT fault injection attack |
-| rsaKeygenWeakness | RSA key generation weakness attack |
-| lowExponentCRT | Low exponent attack with CRT implementation |
-| primePowerModulus | RSA with prime power modulus attack |
-| multiPrimeRSA | Multi-prime RSA attack |
-| factorWithKnownPhi | Factor n with known Euler's totient function |
-| rsaCrtImplementationError | RSA CRT implementation error attack |
-| lowExponentRelatedMessages | Low exponent attack with related messages |
-| commonPrimeAttack | Common prime attack between two RSA keys |
-| rsaPrivateKeyFaultInjection | RSA private key fault injection attack |
+| franklinReiterImproved | Improved Franklin-Reiter attack |
+| bonehDurfee | Boneh-Durfee small private key attack |
+| coppersmith | Coppersmith polynomial small root attack |
+| coppersmithFactor | Coppersmith partial information factorization attack |
+| rsaCrtFaultAttack | CRT fault implementation attack |
+| rsaKeygenWeakness | Key generation weakness exploitation |
+| lowExponentCRT | Low exponent CRT attack |
+| primePowerModulus | Prime power modulus attack |
+| multiPrimeRSA | Multi-prime RSA factorization |
 | factorKnownPrimes | Factor n using known p and q |
 | privateKeyFromFactors | Calculate private key from prime factors |
-| trialDivision | Trial division for small factors |
+| trialDivision | Small factor trial division |
+| factorWithKnownPhi | Factorization with known φ(n) |
+| rsaCrtImplementationError | CRT implementation error attack |
+| lowExponentRelatedMessages | Low exponent related messages attack |
+| commonPrimeAttack | Common prime attack |
+| rsaPrivateKeyFaultInjection | Private key fault injection attack |
 
 ### Hash Submodule
 
@@ -103,16 +98,16 @@ The Hash submodule provides tools for hash analysis and attacks, including hash 
 
 #### Hash Features
 
-- **Hash generation** - Generate hashes using MD5, SHA1, SHA256, SHA512 algorithms
-- **Brute force attack** - Brute force hash cracking with configurable character sets
-- **Dictionary attack** - Dictionary-based hash cracking
-- **Rainbow table attack** - Rainbow table-based hash cracking
-- **Hash collision** - Find hash collisions
-- **Hash prefix generation** - Generate hashes with specified prefixes
-- **Hash length extension** - Perform hash length extension attacks
-- **Hash type analysis** - Analyze hash types based on length and pattern
+- **Hash Generation** - Generate hashes using MD5, SHA1, SHA256, SHA512 algorithms
+- **Brute Force** - Hash brute force using configurable character set
+- **Dictionary Attack** - Dictionary-based hash cracking
+- **Rainbow Table Attack** - Rainbow table-based hash cracking
+- **Hash Collision** - Find hash collisions (using cryptographically secure random numbers)
+- **Hash Prefix Generation** - Generate hashes with specified prefix
+- **Hash Length Extension** - Perform hash length extension attack
+- **Hash Type Analysis** - Analyze hash type based on length and pattern
 
-#### Hash Usage Examples
+#### Hash Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -122,7 +117,7 @@ const md5Hash = solver.Crypto.Hash.md5("test");
 const sha1Hash = solver.Crypto.Hash.sha1("test");
 console.log(md5Hash, sha1Hash);
 
-// Brute force hash cracking
+// Brute force hash
 const plaintext = "abc";
 const hash = solver.Crypto.Hash.md5(plaintext);
 const result = solver.Crypto.Hash.bruteForceHash(hash, "abcdefghijklmnopqrstuvwxyz", 3);
@@ -133,11 +128,54 @@ const hashToAnalyze = "5d41402abc4b2a76b9719d911017c592";
 const algorithms = solver.Crypto.Hash.analyzeHashType(hashToAnalyze);
 console.log(algorithms); // ["MD5"]
 
-// Generate hash with specified prefix
+// Generate hash with prefix
 const prefix = "00";
 const input = solver.Crypto.Hash.generateHashWithPrefix(prefix, 2);
 const generatedHash = solver.Crypto.Hash.md5(input);
 console.log(input, generatedHash);
+
+// Find hash collision
+const collision = solver.Crypto.Hash.findHashCollision("md5", 1000000);
+if (collision) {
+  console.log(collision.input1, collision.input2, collision.hash);
+}
+```
+
+### Lattice Submodule
+
+The Lattice submodule provides tools for lattice-based cryptographic attacks, including LLL algorithm and lattice-based RSA attacks.
+
+#### Lattice Features
+
+- **LLL Algorithm** - Lattice basis reduction algorithm
+- **Hastad Broadcast Attack** - Broadcast attack using lattice methods
+- **Vector Dot Product** - Calculate vector dot product
+- **Vector Norm** - Calculate vector norm
+- **Vector Operations** - Vector addition, subtraction, scalar multiplication
+- **Gram-Schmidt Orthogonalization** - Gram-Schmidt orthogonalization of lattice basis
+- **Short Vector Search** - Find short vectors in lattice
+- **Integer Root Calculation** - Calculate n-th root of large integers
+
+#### Lattice Usage Example
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// Use LLL algorithm to reduce lattice basis
+const basis = [
+  { elements: [1, 0, 0] },
+  { elements: [1, 2, 0] },
+  { elements: [1, 1, 1] }
+];
+const result = solver.Crypto.Lattice.LatticeAttacks.lllAlgorithm(basis);
+console.log(result.reducedBasis, result.determinant);
+
+// Use Hastad broadcast attack
+const moduli = [n1, n2, n3]; // Multiple RSA moduli
+const ciphertexts = [c1, c2, c3]; // Corresponding ciphertexts
+const e = 3n; // Common exponent
+const plaintext = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(moduli, ciphertexts, e);
+console.log(plaintext);
 ```
 
 ## Web Module
@@ -150,12 +188,12 @@ The HTTP submodule provides tools for parsing and analyzing HTTP requests and re
 
 #### HTTP Features
 
-- **Request parsing** - Parse HTTP requests into structured objects
-- **Response parsing** - Parse HTTP responses into structured objects
-- **Security analysis** - Analyze HTTP messages for security issues
-- **Request/response generation** - Generate HTTP messages from structured data
+- **Request Parsing** - Parse HTTP requests into structured objects
+- **Response Parsing** - Parse HTTP responses into structured objects
+- **Security Analysis** - Analyze security issues in HTTP messages
+- **Request/Response Generation** - Generate HTTP messages from structured data
 
-#### HTTP Usage Examples
+#### HTTP Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -181,14 +219,14 @@ The Security submodule provides tools for analyzing web security issues, includi
 
 #### Security Features
 
-- **JWT analysis** - Parse and verify JWT tokens
-- **CSRF token analysis** - Analyze CSRF token security
-- **XSS payload generation** - Generate XSS test payloads
-- **XSS detection** - Detect XSS vulnerabilities in HTML
-- **Session management analysis** - Analyze session cookie security
-- **SQL injection detection** - Detect SQL injection patterns
+- **JWT Analysis** - Parse and verify JWT tokens
+- **CSRF Token Analysis** - Analyze CSRF token security
+- **XSS Payload Generation** - Generate XSS test payloads
+- **XSS Detection** - Detect XSS vulnerabilities in HTML
+- **Session Management Analysis** - Analyze session cookie security
+- **SQL Injection Detection** - Detect SQL injection patterns
 
-#### Security Usage Examples
+#### Security Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -209,23 +247,23 @@ const payloads = solver.Web.Security.WebSecurity.generateXSSPayloads(xssType);
 console.log(payloads);
 ```
 
-## ReverseEngineering Module
+## Reverse Engineering Module
 
-The ReverseEngineering module provides tools for analyzing binary files and control flow graphs.
+The Reverse Engineering module provides tools for analyzing binary files and control flow graphs.
 
-### ReverseEngineering Features
+### Reverse Engineering Features
 
-- **Control flow analysis** - Analyze control flow graphs of binary files
-- **Binary disassembly** - Disassemble binary code into assembly instructions
-- **Function identification** - Identify functions in binary files
-- **Call graph generation** - Generate call graphs for binary files
-- **String analysis** - Extract and analyze strings from binary files
-- **Symbol analysis** - Analyze import/export symbols in binary files
-- **Binary structure analysis** - Analyze binary file structure (ELF, PE)
-- **Security analysis** - Analyze binary files for security features (canary, PIE, NX)
-- **Vulnerability analysis** - Detect potential vulnerabilities in binary files
+- **Control Flow Analysis** - Analyze control flow graphs of binary files
+- **Binary Disassembly** - Disassemble binary code into assembly instructions
+- **Function Identification** - Identify functions in binary files
+- **Call Graph Generation** - Generate call graphs for binary files
+- **String Analysis** - Extract and analyze strings from binary files
+- **Symbol Analysis** - Analyze import/export symbols in binary files
+- **Binary Structure Analysis** - Analyze binary file structure (ELF, PE)
+- **Security Analysis** - Analyze security features of binary files (canary, PIE, NX)
+- **Vulnerability Analysis** - Detect potential vulnerabilities in binary files
 
-### ReverseEngineering Usage Examples
+### Reverse Engineering Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -249,10 +287,10 @@ The Analysis module provides tools for cryptanalysis and frequency analysis.
 
 ### Analysis Features
 
-- **Frequency analysis** - Analyze character frequencies in ciphertext
-- **Cryptanalysis utilities** - Tools for breaking classical ciphers
+- **Frequency Analysis** - Analyze character frequency in ciphertext
+- **Cryptanalysis Tools** - Tools for breaking classical ciphers
 
-### Analysis Usage Examples
+### Analysis Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -273,10 +311,10 @@ The Utils module provides utility functions for CTF challenges, including dictio
 
 ### Utils Features
 
-- **Dictionary generation** - Generate dictionaries for brute force attacks
-- **General utilities** - Various utility functions for CTF challenges
+- **Dictionary Generation** - Generate dictionaries for brute force
+- **General Utilities** - Various utility functions for CTF challenges
 
-### Utils Usage Examples
+### Utils Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -295,14 +333,15 @@ The Forensics module provides tools for analyzing files, extracting hidden data,
 
 ### Forensics Features
 
-- **File type detection** - Identify file types based on magic bytes
-- **PNG analysis** - Analyze PNG structure and detect steganography
-- **ZIP analysis** - Detect pseudo-encryption in ZIP files
-- **LSB extraction** - Extract hidden data from images using least significant bit steganography
-- **Memory forensics** - Analyze memory dumps and extract information
-- **Network traffic analysis** - Analyze PCAP files and network traffic patterns
+- **File Type Detection** - Identify file types based on magic bytes
+- **PNG Analysis** - Analyze PNG structure and detect steganography
+- **ZIP Analysis** - Detect pseudo-encryption in ZIP files
+- **LSB Extraction** - Extract hidden data from images using LSB steganography
+- **Memory Forensics** - Analyze memory dumps and extract information
+- **Network Traffic Analysis** - Analyze PCAP files and network traffic patterns
+- **Audio Steganography** - Audio file steganography analysis
 
-### Forensics Usage Examples
+### Forensics Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -338,18 +377,18 @@ console.log(networkInfo);
 
 ## Exploitation Module
 
-The Exploitation module provides tools for binary vulnerability exploitation, including ROP chain generation, buffer overflow utilities, and shellcode generation.
+The Exploitation module provides tools for binary exploitation, including ROP chain generation, buffer overflow tools, and shellcode generation.
 
 ### Exploitation Features
 
-- **ROP chain generation** - Generate return-oriented programming chains
-- **Buffer overflow utilities** - Calculate offsets and generate payloads
-- **Shellcode generation** - Generate shellcode for various architectures
-- **Format string exploitation** - Analyze and exploit format string vulnerabilities
-- **Heap exploitation** - Tools for heap overflow and use-after-free vulnerabilities
-- **Binary structure analysis** - Analyze ELF, PE, and Mach-O binaries
+- **ROP Chain Generation** - Generate Return-Oriented Programming chains
+- **Buffer Overflow Tools** - Calculate offsets and generate payloads
+- **Shellcode Generation** - Generate shellcode for various architectures
+- **Format String Exploitation** - Analyze and exploit format string vulnerabilities
+- **Heap Exploitation** - Tools for heap overflow and use-after-free vulnerabilities
+- **Binary Structure Analysis** - Analyze ELF, PE, and Mach-O binary files
 
-### Exploitation Usage Examples
+### Exploitation Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -363,7 +402,7 @@ console.log(ropChain);
 
 // Buffer overflow offset calculation
 const pattern = solver.Exploitation.BufferOverflow.generatePattern(200);
-// After crashing the program with the pattern
+// After crashing program with pattern
 const offset = solver.Exploitation.BufferOverflow.findOffset("0x41424344");
 console.log("Buffer overflow offset:", offset);
 
@@ -382,17 +421,19 @@ console.log(binaryInfo);
 
 ## Math Module
 
-The Math module provides advanced mathematical utilities for solving CTF challenges, including number theory, linear algebra, combinatorics, and cryptographic math.
+The Math module provides advanced mathematical tools for solving CTF challenges, including number theory, linear algebra, combinatorics, and cryptographic mathematics.
 
 ### Math Features
 
-- **Number theory** - GCD, LCM, extended Euclidean algorithm, modular inverse, etc.
-- **Linear algebra** - Matrix operations, determinants, inverses
-- **Combinatorics** - Permutations, combinations, subsets
-- **Cryptographic math** - Primality testing, modular exponentiation, discrete logarithms
+- **Number Theory** - GCD, LCM, Extended Euclidean Algorithm, Modular Inverse, Euler's Totient, Möbius Function, Primitive Root
+- **Linear Algebra** - Matrix operations, determinant, inverse matrix
+- **Combinatorics** - Permutations, combinations, subsets, binomial coefficients
+- **Cryptographic Mathematics** - Prime testing (Miller-Rabin), modular exponentiation, discrete logarithm
 - **Factorization** - Pollard's Rho algorithm, trial division
+- **Chinese Remainder Theorem** - Solve linear congruence systems using CRT
+- **Quadratic Residues** - Solve quadratic congruence equations (Tonelli-Shanks algorithm)
 
-### Math Usage Examples
+### Math Usage Example
 
 ```javascript
 const { solver } = require("ctf-utils");
@@ -401,21 +442,37 @@ const { solver } = require("ctf-utils");
 const gcd = solver.Math.gcd(12345n, 67890n);
 const lcm = solver.Math.lcm(12345n, 67890n);
 const modInverse = solver.Math.modInverse(3n, 26n);
+const extendedGcd = solver.Math.extendedGcd(35n, 15n);
+const phi = solver.Math.eulerTotient(12n);
+const isPrime = solver.Math.isPrime(999999937n);
 
 // Linear algebra
 const matrix = [[1, 2], [3, 4]];
 const determinant = solver.Math.matrixDeterminant(matrix);
 const inverse = solver.Math.matrixInverse(matrix);
+const product = solver.Math.matrixMultiply([[1, 2], [3, 4]], [[5, 6], [7, 8]]);
 
 // Combinatorics
 const combinations = solver.Math.generateCombinations([1, 2, 3, 4], 2);
 const permutations = solver.Math.generatePermutations([1, 2, 3]);
+const subsets = solver.Math.generateSubsets([1, 2, 3]);
+const binom = solver.Math.binomialCoefficient(10, 3);
 
-// Cryptographic math
-const isPrime = solver.Math.isPrime(999999937n);
-const modularExp = solver.Math.modularExponentiation(2n, 10n, 1000n);
+// Cryptographic mathematics
+const modularExp = solver.Math.modPow(2n, 10n, 1000n);
+const discreteLog = solver.Math.discreteLogarithm(2n, 8n, 11n);
+const primitiveRoot = solver.Math.findPrimitiveRoot(11n);
 
 // Factorization
 const factors = solver.Math.pollardsRho(123456789n);
 console.log(factors);
+
+// Chinese Remainder Theorem
+const congruences = [[2n, 3n], [3n, 5n], [2n, 7n]];
+const result = solver.Math.solveCRT(congruences);
+console.log(result); // 23n
+
+// Quadratic congruence solving
+const solutions = solver.Math.solveQuadraticCongruence(3n, 11n);
+console.log(solutions);
 ```

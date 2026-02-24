@@ -6,6 +6,9 @@ Solver 模块提供了用于解决 CTF 挑战的高级工具，包括密码学�
 
 ## 目录
 - [密码学模块](#密码学模块)
+  - [RSA 子模块](#rsa-子模块)
+  - [Hash 子模块](#hash-子模块)
+  - [Lattice 子模块](#lattice-子模块)
 - [取证模块](#取证模块)
 - [漏洞利用模块](#漏洞利用模块)
 - [数学模块](#数学模块)
@@ -16,7 +19,7 @@ Solver 模块提供了用于解决 CTF 挑战的高级工具，包括密码学�
 
 ## 密码学模块
 
-密码学模块提供了全面的密码学挑战工具，包括 RSA 密码学和哈希攻击。
+密码学模块提供了全面的密码学挑战工具，包括 RSA 密码学、哈希攻击和格密码学攻击。
 
 ### RSA 子模块
 
@@ -27,7 +30,7 @@ RSA 子模块提供了用于 RSA 密码学挑战的工具，包括密钥生成�
 - **密钥生成** - 生成具有可配置位长度的 RSA 密钥对
 - **加密/解密** - 基本 RSA 加密和解密，带有 CRT 优化
 - **常见攻击** - 各种 RSA 攻击方法的实现
-- **实用函数** - 素数检测、密钥强度评估等
+- **实用函数** - 素数检测、密钥强度评估、GCD、模逆元等
 
 #### RSA 使用示例
 
@@ -71,12 +74,23 @@ console.log(root); // 42n
 | wiener | Wiener 小私钥攻击 |
 | hastadBroadcast | 使用多个公钥的 Hastad 广播攻击 |
 | franklinReiter | Franklin-Reiter 相关消息攻击 |
+| franklinReiterImproved | 改进的 Franklin-Reiter 攻击 |
 | bonehDurfee | Boneh-Durfee 小私钥攻击 |
 | coppersmith | Coppersmith 多项式小根攻击 |
 | coppersmithFactor | Coppersmith 部分信息因式分解攻击 |
+| rsaCrtFaultAttack | CRT 错误实现攻击 |
+| rsaKeygenWeakness | 密钥生成弱点的利用 |
+| lowExponentCRT | 低指数 CRT 攻击 |
+| primePowerModulus | 质数幂模数攻击 |
+| multiPrimeRSA | 多素数 RSA 分解 |
 | factorKnownPrimes | 使用已知 p 和 q 分解 n |
 | privateKeyFromFactors | 从素数因子计算私钥 |
 | trialDivision | 小因子试除法 |
+| factorWithKnownPhi | 已知 φ(n) 的因式分解 |
+| rsaCrtImplementationError | CRT 实现错误攻击 |
+| lowExponentRelatedMessages | 低指数相关消息攻击 |
+| commonPrimeAttack | 共同素数攻击 |
+| rsaPrivateKeyFaultInjection | 私钥错误注入攻击 |
 
 ### Hash 子模块
 
@@ -88,7 +102,7 @@ Hash 子模块提供了用于哈希分析和攻击的工具，包括哈希生成
 - **暴力破解** - 使用可配置字符集的哈希暴力破解
 - **字典攻击** - 基于字典的哈希破解
 - **彩虹表攻击** - 基于彩虹表的哈希破解
-- **哈希碰撞** - 查找哈希碰撞
+- **哈希碰撞** - 查找哈希碰撞（使用加密安全的随机数）
 - **哈希前缀生成** - 生成具有指定前缀的哈希
 - **哈希长度扩展** - 执行哈希长度扩展攻击
 - **哈希类型分析** - 基于长度和模式分析哈希类型
@@ -115,10 +129,53 @@ const algorithms = solver.Crypto.Hash.analyzeHashType(hashToAnalyze);
 console.log(algorithms); // ["MD5"]
 
 // 生成指定前缀的哈希
-const prefix = "00";```javascript
+const prefix = "00";
 const input = solver.Crypto.Hash.generateHashWithPrefix(prefix, 2);
 const generatedHash = solver.Crypto.Hash.md5(input);
 console.log(input, generatedHash);
+
+// 查找哈希碰撞
+const collision = solver.Crypto.Hash.findHashCollision("md5", 1000000);
+if (collision) {
+  console.log(collision.input1, collision.input2, collision.hash);
+}
+```
+
+### Lattice 子模块
+
+Lattice 子模块提供了用于格密码学攻击的工具，包括 LLL 算法和基于格的 RSA 攻击。
+
+#### Lattice 功能
+
+- **LLL 算法** - 格基约减算法
+- **Hastad 广播攻击** - 使用格方法的广播攻击
+- **向量的点积** - 计算向量点积
+- **向量范数** - 计算向量范数
+- **向量运算** - 向量加减、标量乘法
+- **Gram-Schmidt 正交化** - 格基的 Gram-Schmidt 正交化
+- **短向量搜索** - 在格中寻找短向量
+- **整数根计算** - 计算大整数的 n 次根
+
+#### Lattice 使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 使用 LLL 算法约减格基
+const basis = [
+  { elements: [1, 0, 0] },
+  { elements: [1, 2, 0] },
+  { elements: [1, 1, 1] }
+];
+const result = solver.Crypto.Lattice.LatticeAttacks.lllAlgorithm(basis);
+console.log(result.reducedBasis, result.determinant);
+
+// 使用 Hastad 广播攻击
+const moduli = [n1, n2, n3]; // 多个 RSA 模数
+const ciphertexts = [c1, c2, c3]; // 对应的密文
+const e = 3n; // 公共指数
+const plaintext = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(moduli, ciphertexts, e);
+console.log(plaintext);
 ```
 
 ## Web 模块
@@ -282,6 +339,7 @@ console.log(dictionary);
 - **LSB 提取** - 使用最低有效位隐写术从图像中提取隐藏数据
 - **内存取证** - 分析内存转储并提取信息
 - **网络流量分析** - 分析 PCAP 文件和网络流量模式
+- **音频隐写术** - 音频文件隐写术分析
 
 ### 取证使用示例
 
@@ -367,11 +425,13 @@ console.log(binaryInfo);
 
 ### 数学功能
 
-- **数论** - 最大公约数、最小公倍数、扩展欧几里得算法、模逆元等
+- **数论** - 最大公约数(GCD)、最小公倍数(LCM)、扩展欧几里得算法、模逆元、欧拉函数、莫比乌斯函数、原根
 - **线性代数** - 矩阵运算、行列式、逆矩阵
-- **组合数学** - 排列、组合、子集
-- **密码学数学** - 素数测试、模幂运算、离散对数
+- **组合数学** - 排列、组合、子集、二项式系数
+- **密码学数学** - 素数测试(Miller-Rabin)、模幂运算、离散对数
 - **因式分解** - Pollard's Rho 算法、试除法
+- **中国剩余定理** - CRT 求解线性同余方程组
+- **二次剩余** - 二次同余方程求解（Tonelli-Shanks 算法）
 
 ### 数学使用示例
 
@@ -382,21 +442,37 @@ const { solver } = require("ctf-utils");
 const gcd = solver.Math.gcd(12345n, 67890n);
 const lcm = solver.Math.lcm(12345n, 67890n);
 const modInverse = solver.Math.modInverse(3n, 26n);
+const extendedGcd = solver.Math.extendedGcd(35n, 15n);
+const phi = solver.Math.eulerTotient(12n);
+const isPrime = solver.Math.isPrime(999999937n);
 
 // 线性代数
 const matrix = [[1, 2], [3, 4]];
 const determinant = solver.Math.matrixDeterminant(matrix);
 const inverse = solver.Math.matrixInverse(matrix);
+const product = solver.Math.matrixMultiply([[1, 2], [3, 4]], [[5, 6], [7, 8]]);
 
 // 组合数学
 const combinations = solver.Math.generateCombinations([1, 2, 3, 4], 2);
 const permutations = solver.Math.generatePermutations([1, 2, 3]);
+const subsets = solver.Math.generateSubsets([1, 2, 3]);
+const binom = solver.Math.binomialCoefficient(10, 3);
 
 // 密码学数学
-const isPrime = solver.Math.isPrime(999999937n);
-const modularExp = solver.Math.modularExponentiation(2n, 10n, 1000n);
+const modularExp = solver.Math.modPow(2n, 10n, 1000n);
+const discreteLog = solver.Math.discreteLogarithm(2n, 8n, 11n);
+const primitiveRoot = solver.Math.findPrimitiveRoot(11n);
 
 // 因式分解
 const factors = solver.Math.pollardsRho(123456789n);
 console.log(factors);
+
+// 中国剩余定理
+const congruences = [[2n, 3n], [3n, 5n], [2n, 7n]];
+const result = solver.Math.solveCRT(congruences);
+console.log(result); // 23n
+
+// 二次同余求解
+const solutions = solver.Math.solveQuadraticCongruence(3n, 11n);
+console.log(solutions);
 ```
