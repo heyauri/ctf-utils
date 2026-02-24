@@ -9,6 +9,7 @@ The Solver module provides advanced tools for solving CTF challenges, including 
   - [RSA Submodule](#rsa-submodule)
   - [Hash Submodule](#hash-submodule)
   - [Lattice Submodule](#lattice-submodule)
+  - [ECC Submodule](#ecc-submodule)
 - [Forensics Module](#forensics-module)
 - [Exploitation Module](#exploitation-module)
 - [Math Module](#math-module)
@@ -178,6 +179,62 @@ const plaintext = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(mod
 console.log(plaintext);
 ```
 
+### ECC Submodule
+
+The ECC submodule provides Elliptic Curve Cryptography tools including key generation, point operations, and various attack methods.
+
+#### ECC Features
+
+- **Key Generation** - Generate ECC key pairs
+- **Point Operations** - Elliptic curve point addition, point multiplication
+- **Small Private Key Attack** - Brute force small private keys
+- **Smart Attack** - Smart attack
+- **Pohlig-Hellman Attack** - Pohlig-Hellman discrete logarithm attack
+- **DSA Signing** - DSA signature generation and verification
+- **DSA Attacks** - Known high bits attack, repeated k value attack
+- **PRNG Attacks** - Pseudorandom number generator attacks
+- **Hash Length Extension Attack** - MD5/SHA1/SHA256 length extension
+- **AES-GCM Analysis** - AES-GCM mode analysis
+- **ElGamal Encryption** - ElGamal encryption and decryption
+
+#### ECC Usage Example
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// ECC key generation
+const params = {
+  a: 1n, b: 1n,
+  G: { x: 1n, y: 1n },
+  n: 997n
+};
+const keyPair = solver.Crypto.ECC.ECC.generateKeyPair(params);
+console.log(keyPair.publicKey, keyPair.privateKey);
+
+// Point operations
+const ecc = new solver.Crypto.ECC.ECC(params);
+const point = ecc.pointMultiply(5n, params.G);
+console.log(point);
+
+// DSA signing
+const p = 167n;
+const q = 83n;
+const g = 2n;
+const dsaKey = solver.Crypto.ECC.DSA.generateKeyPair(p, q, g);
+console.log(dsaKey);
+
+// PRNG MT19937 untemper
+const output = 123456789;
+const state = solver.Crypto.ECC.PRNG.untemper(output);
+console.log(state);
+
+// ElGamal encryption
+const message = 42n;
+const elGamalKey = { p: 257n, g: 2n, y: 69n };
+const encrypted = solver.Crypto.ECC.ElGamal.encrypt(message, elGamalKey.p, elGamalKey.g, elGamalKey.y);
+console.log(encrypted);
+```
+
 ## Web Module
 
 The Web module provides tools for analyzing HTTP requests/responses and detecting web security vulnerabilities.
@@ -307,11 +364,12 @@ console.log(englishFreq);
 
 ## Utils Module
 
-The Utils module provides utility functions for CTF challenges, including dictionary generation.
+The Utils module provides utility functions for CTF challenges, including dictionary generation and QR code tools.
 
 ### Utils Features
 
 - **Dictionary Generation** - Generate dictionaries for brute force
+- **QR Code Tools** - Parse QR codes from images, detect steganography
 - **General Utilities** - Various utility functions for CTF challenges
 
 ### Utils Usage Example
@@ -325,6 +383,12 @@ const minLength = 1;
 const maxLength = 3;
 const dictionary = solver.Utils.DictionaryGenerator.generate(charset, minLength, maxLength);
 console.log(dictionary);
+
+// QR code parsing
+const qrResult = solver.Utils.QRCode.parse("image.png");
+console.log(qrResult);
+const qrStego = solver.Utils.QRCode.detectStego("image.png");
+console.log(qrStego);
 ```
 
 ## Forensics Module
@@ -340,6 +404,8 @@ The Forensics module provides tools for analyzing files, extracting hidden data,
 - **Memory Forensics** - Analyze memory dumps and extract information
 - **Network Traffic Analysis** - Analyze PCAP files and network traffic patterns
 - **Audio Steganography** - Audio file steganography analysis
+- **PDF Analysis** - PDF file structure analysis and steganography detection
+- **Video Steganography** - Video file steganography analysis
 
 ### Forensics Usage Example
 
@@ -373,6 +439,20 @@ console.log(memoryInfo);
 const pcapData = fs.readFileSync("traffic.pcap");
 const networkInfo = solver.Forensics.NetworkTraffic.analyze(pcapData);
 console.log(networkInfo);
+
+// PDF analysis
+const pdfInfo = solver.Forensics.PDFAnalyzer.analyze("document.pdf");
+console.log(pdfInfo);
+const pdfStrings = solver.Forensics.PDFAnalyzer.extractStrings("document.pdf");
+console.log(pdfStrings);
+const pdfStego = solver.Forensics.PDFAnalyzer.detectHiddenData("document.pdf");
+console.log(pdfStego);
+
+// Video steganography detection
+const videoInfo = solver.Forensics.VideoSteganography.getInfo("video.mp4");
+console.log(videoInfo);
+const videoStego = solver.Forensics.VideoSteganography.detectLSBStego("video.mp4");
+console.log(videoStego);
 ```
 
 ## Exploitation Module

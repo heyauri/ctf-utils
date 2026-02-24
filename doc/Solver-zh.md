@@ -9,6 +9,7 @@ Solver 模块提供了用于解决 CTF 挑战的高级工具，包括密码学�
   - [RSA 子模块](#rsa-子模块)
   - [Hash 子模块](#hash-子模块)
   - [Lattice 子模块](#lattice-子模块)
+  - [ECC 子模块](#ecc-子模块)
 - [取证模块](#取证模块)
 - [漏洞利用模块](#漏洞利用模块)
 - [数学模块](#数学模块)
@@ -178,6 +179,62 @@ const plaintext = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(mod
 console.log(plaintext);
 ```
 
+### ECC 子模块
+
+ECC 子模块提供了椭圆曲线密码学 (Elliptic Curve Cryptography) 工具，包括密钥生成、点运算和各种攻击方法。
+
+#### ECC 功能
+
+- **密钥生成** - 生成 ECC 密钥对
+- **点运算** - 椭圆曲线点加法、点乘法
+- **小私钥攻击** - 暴力搜索小私钥
+- **Smart 攻击** - Smart 攻击
+- **Pohlig-Hellman 攻击** - Pohlig-Hellman 离散对数攻击
+- **DSA 签名** - DSA 签名生成和验证
+- **DSA 攻击** - 已知高位攻击、重复 k 值攻击
+- **PRNG 攻击** - 伪随机数发生器攻击
+- **哈希长度扩展攻击** - MD5/SHA1/SHA256 长度扩展
+- **AES-GCM 分析** - AES-GCM 模式分析
+- **ElGamal 加密** - ElGamal 加密和解密
+
+#### ECC 使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// ECC 密钥生成
+const params = {
+  a: 1n, b: 1n,
+  G: { x: 1n, y: 1n },
+  n: 997n
+};
+const keyPair = solver.Crypto.ECC.ECC.generateKeyPair(params);
+console.log(keyPair.publicKey, keyPair.privateKey);
+
+// 点运算
+const ecc = new solver.Crypto.ECC.ECC(params);
+const point = ecc.pointMultiply(5n, params.G);
+console.log(point);
+
+// DSA 签名
+const p = 167n;
+const q = 83n;
+const g = 2n;
+const dsaKey = solver.Crypto.ECC.DSA.generateKeyPair(p, q, g);
+console.log(dsaKey);
+
+// PRNG MT19937 逆向
+const output = 123456789;
+const state = solver.Crypto.ECC.PRNG.untemper(output);
+console.log(state);
+
+// ElGamal 加密
+const message = 42n;
+const elGamalKey = { p: 257n, g: 2n, y: 69n };
+const encrypted = solver.Crypto.ECC.ElGamal.encrypt(message, elGamalKey.p, elGamalKey.g, elGamalKey.y);
+console.log(encrypted);
+```
+
 ## Web 模块
 
 Web 模块提供了用于分析 HTTP 请求/响应和检测 Web 安全漏洞的工具。
@@ -307,11 +364,12 @@ console.log(englishFreq);
 
 ## 工具模块
 
-工具模块提供了用于 CTF 挑战的实用函数，包括字典生成。
+工具模块提供了用于 CTF 挑战的实用函数，包括字典生成和二维码工具。
 
 ### 工具功能
 
 - **字典生成** - 生成用于暴力破解的字典
+- **二维码工具** - 解析图片中的二维码、检测隐写
 - **通用工具** - 各种用于 CTF 挑战的实用函数
 
 ### 工具使用示例
@@ -325,6 +383,12 @@ const minLength = 1;
 const maxLength = 3;
 const dictionary = solver.Utils.DictionaryGenerator.generate(charset, minLength, maxLength);
 console.log(dictionary);
+
+// 二维码解析
+const qrResult = solver.Utils.QRCode.parse("image.png");
+console.log(qrResult);
+const qrStego = solver.Utils.QRCode.detectStego("image.png");
+console.log(qrStego);
 ```
 
 ## 取证模块
@@ -340,6 +404,8 @@ console.log(dictionary);
 - **内存取证** - 分析内存转储并提取信息
 - **网络流量分析** - 分析 PCAP 文件和网络流量模式
 - **音频隐写术** - 音频文件隐写术分析
+- **PDF 分析** - PDF 文件结构分析和隐写检测
+- **视频隐写术** - 视频文件隐写分析
 
 ### 取证使用示例
 
@@ -373,6 +439,20 @@ console.log(memoryInfo);
 const pcapData = fs.readFileSync("traffic.pcap");
 const networkInfo = solver.Forensics.NetworkTraffic.analyze(pcapData);
 console.log(networkInfo);
+
+// PDF 分析
+const pdfInfo = solver.Forensics.PDFAnalyzer.analyze("document.pdf");
+console.log(pdfInfo);
+const pdfStrings = solver.Forensics.PDFAnalyzer.extractStrings("document.pdf");
+console.log(pdfStrings);
+const pdfStego = solver.Forensics.PDFAnalyzer.detectHiddenData("document.pdf");
+console.log(pdfStego);
+
+// 视频隐写检测
+const videoInfo = solver.Forensics.VideoSteganography.getInfo("video.mp4");
+console.log(videoInfo);
+const videoStego = solver.Forensics.VideoSteganography.detectLSBStego("video.mp4");
+console.log(videoStego);
 ```
 
 ## 漏洞利用模块
