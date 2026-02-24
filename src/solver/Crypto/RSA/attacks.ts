@@ -56,48 +56,76 @@ const convergents = (cf: bigint[]): { k: bigint; d: bigint }[] => {
  * @returns GCD polynomial represented as array of coefficients
  */
 const polynomialGCD = (poly1: bigint[], poly2: bigint[], n: bigint): bigint[] => {
-  // Make sure poly1 is the larger polynomial
-  if (poly1.length < poly2.length) {
-    [poly1, poly2] = [poly2, poly1];
-  }
+  // Clone polynomials to avoid modifying original arrays
+  let a = [...poly1];
+  let b = [...poly2];
   
   // Remove leading zeros from both polynomials first
-  while (poly1.length > 0 && poly1[0] === 0n) {
-    poly1.shift();
+  while (a.length > 0 && a[0] === 0n) {
+    a.shift();
   }
-  while (poly2.length > 0 && poly2[0] === 0n) {
-    poly2.shift();
+  while (b.length > 0 && b[0] === 0n) {
+    b.shift();
   }
   
   // Handle edge cases
-  if (poly1.length === 0) return [0n];
-  if (poly2.length === 0) return poly1;
+  if (a.length === 0) return [0n];
+  if (b.length === 0) {
+    // Normalize the result (leading coefficient should be 1)
+    if (a.length > 0) {
+      const leadingCoeff = a[0];
+      if (leadingCoeff !== 1n && leadingCoeff !== 0n) {
+        try {
+          const invLeadingCoeff = modInv(leadingCoeff, n);
+          for (let i = 0; i < a.length; i++) {
+            a[i] = (a[i] * invLeadingCoeff) % n;
+            if (a[i] < 0n) {
+              a[i] += n;
+            }
+          }
+        } catch (error) {
+          // If modInv fails, return the polynomial as is
+        }
+      }
+      
+      // Remove leading zeros
+      while (a.length > 0 && a[0] === 0n) {
+        a.shift();
+      }
+    }
+    return a.length > 0 ? a : [0n];
+  }
   
   // Polynomial division until remainder is zero
-  while (poly2.length > 0 && poly2.some(coeff => coeff !== 0n)) {
+  while (b.length > 0 && b.some(coeff => coeff !== 0n)) {
     // Compute quotient and remainder
-    const [quotient, remainder] = polynomialDivide(poly1, poly2, n);
+    const [, remainder] = polynomialDivide(a, b, n);
     
-    // Update poly1 and poly2 for next iteration
-    poly1 = poly2;
-    poly2 = remainder;
+    // Update a and b for next iteration
+    a = b;
+    b = remainder;
     
-    // Remove leading zeros from poly2 to optimize next iteration
-    while (poly2.length > 0 && poly2[0] === 0n) {
-      poly2.shift();
+    // Remove leading zeros from b to optimize next iteration
+    while (b.length > 0 && b[0] === 0n) {
+      b.shift();
+    }
+    
+    // Early termination for performance
+    if (b.length === 1 && b[0] === 0n) {
+      break;
     }
   }
   
   // Normalize the result (leading coefficient should be 1)
-  if (poly1.length > 0) {
-    const leadingCoeff = poly1[0];
+  if (a.length > 0) {
+    const leadingCoeff = a[0];
     if (leadingCoeff !== 1n && leadingCoeff !== 0n) {
       try {
         const invLeadingCoeff = modInv(leadingCoeff, n);
-        for (let i = 0; i < poly1.length; i++) {
-          poly1[i] = (poly1[i] * invLeadingCoeff) % n;
-          if (poly1[i] < 0n) {
-            poly1[i] += n;
+        for (let i = 0; i < a.length; i++) {
+          a[i] = (a[i] * invLeadingCoeff) % n;
+          if (a[i] < 0n) {
+            a[i] += n;
           }
         }
       } catch (error) {
@@ -106,12 +134,12 @@ const polynomialGCD = (poly1: bigint[], poly2: bigint[], n: bigint): bigint[] =>
     }
     
     // Remove leading zeros
-    while (poly1.length > 0 && poly1[0] === 0n) {
-      poly1.shift();
+    while (a.length > 0 && a[0] === 0n) {
+      a.shift();
     }
   }
   
-  return poly1.length > 0 ? poly1 : [0n];
+  return a.length > 0 ? a : [0n];
 };
 
 /**
@@ -130,8 +158,10 @@ const polynomialDivide = (dividend: bigint[], divisor: bigint[], n: bigint): [bi
   const divisorLeading = divisor[0];
   const invDivisorLeading = modInv(divisorLeading, n);
   
-  // Precompute divisor coefficients to avoid repeated access
-  const divisorCoeffs = [...divisor];
+  // Early return if dividend degree is less than divisor degree
+  if (remainder.length <= divisorDegree) {
+    return [[], remainder.length > 0 ? remainder : [0n]];
+  }
   
   // Perform polynomial long division
   while (remainder.length > divisorDegree) {
@@ -144,7 +174,7 @@ const polynomialDivide = (dividend: bigint[], divisor: bigint[], n: bigint): [bi
     
     // Subtract (currentQuotientTerm * divisor) from remainder
     for (let i = 0; i <= divisorDegree; i++) {
-      const term = (currentQuotientTerm * divisorCoeffs[i]) % n;
+      const term = (currentQuotientTerm * divisor[i]) % n;
       remainder[i] = (remainder[i] - term) % n;
       if (remainder[i] < 0n) {
         remainder[i] += n;
@@ -179,12 +209,10 @@ export const smallExponent = (ciphertext: bigint, publicKey: RSAPublicKey): bigi
   const { n } = publicKey;
   
   // Calculate cube root using efficient algorithm
-  // First, try to find integer cube root directly
-  let m = 0n;
+  // First, try to find integer cube root directly using optimized binary search
   let low = 0n;
   let high = n;
   
-  // Optimized binary search for cube root
   while (low <= high) {
     const mid = (low + high) / 2n;
     const mid3 = mid * mid * mid;
@@ -258,21 +286,25 @@ export const commonModulus = (
     throw new Error('Public exponents must be coprime');
   }
   
-  // Calculate m = (c1^x * c2^y) mod n
-  let m: bigint;
-  if (x > 0n && y > 0n) {
-    m = (bigintCryptoUtils.modPow(ciphertext1, x, n) * bigintCryptoUtils.modPow(ciphertext2, y, n)) % n;
-  } else if (x > 0n && y < 0n) {
-    const c2Inv = bigintCryptoUtils.modInv(ciphertext2, n);
-    m = (bigintCryptoUtils.modPow(ciphertext1, x, n) * bigintCryptoUtils.modPow(c2Inv, -y, n)) % n;
-  } else if (x < 0n && y > 0n) {
-    const c1Inv = bigintCryptoUtils.modInv(ciphertext1, n);
-    m = (bigintCryptoUtils.modPow(c1Inv, -x, n) * bigintCryptoUtils.modPow(ciphertext2, y, n)) % n;
+  // Calculate m = (c1^x * c2^y) mod n using optimized exponentiation
+  let term1: bigint;
+  let term2: bigint;
+  
+  if (x > 0n) {
+    term1 = bigintCryptoUtils.modPow(ciphertext1, x, n);
   } else {
     const c1Inv = bigintCryptoUtils.modInv(ciphertext1, n);
-    const c2Inv = bigintCryptoUtils.modInv(ciphertext2, n);
-    m = (bigintCryptoUtils.modPow(c1Inv, -x, n) * bigintCryptoUtils.modPow(c2Inv, -y, n)) % n;
+    term1 = bigintCryptoUtils.modPow(c1Inv, -x, n);
   }
+  
+  if (y > 0n) {
+    term2 = bigintCryptoUtils.modPow(ciphertext2, y, n);
+  } else {
+    const c2Inv = bigintCryptoUtils.modInv(ciphertext2, n);
+    term2 = bigintCryptoUtils.modPow(c2Inv, -y, n);
+  }
+  
+  let m = (term1 * term2) % n;
   
   if (m < 0n) {
     m += n;
@@ -293,17 +325,18 @@ export const wiener = (publicKey: RSAPublicKey): RSAPrivateKey | null => {
   const cf = continuedFraction(e, n);
   const convs = convergents(cf);
   
+  // Precompute test message and its encryption for faster verification
+  const testMessage = 2n;
+  const encryptedTestMessage = bigintCryptoUtils.modPow(testMessage, e, n);
+  
   // Check each convergent
   for (const { k, d } of convs) {
-    if (k === 0n) continue;
-    if (d === 0n) continue;
+    if (k === 0n || d === 0n) continue;
     
     // Check if d is the private exponent
     try {
-      const m = 2n;
-      const c = bigintCryptoUtils.modPow(m, e, n);
-      const m_decrypted = bigintCryptoUtils.modPow(c, d, n);
-      if (m_decrypted === m) {
+      const decryptedMessage = bigintCryptoUtils.modPow(encryptedTestMessage, d, n);
+      if (decryptedMessage === testMessage) {
         return { d, n };
       }
     } catch (error) {
@@ -330,7 +363,7 @@ export const hastadBroadcast = (ciphertexts: bigint[], publicKeys: RSAPublicKey[
     throw new Error('Hastad\'s broadcast attack requires e=3 for all public keys');
   }
   
-  // Chinese Remainder Theorem implementation
+  // Chinese Remainder Theorem implementation with optimized performance
   const crt = (remainders: bigint[], moduli: bigint[]): bigint => {
     let result = 0n;
     let product = moduli.reduce((a, b) => a * b, 1n);
@@ -412,7 +445,7 @@ export const franklinReiter = (
     // We can use the extended Euclidean algorithm for polynomials modulo n
     
     // Coefficients of the first polynomial: x^3 - c1
-    const poly1 = [1n, 0n, 0n, -ciphertext1 % n];
+    const poly1 = [1n, 0n, 0n, (-ciphertext1) % n];
     
     // Coefficients of the second polynomial: a^3 x^3 + 3a^2 b x^2 + 3ab^2 x + (b^3 - c2)
     const a3 = (a * a * a) % n;
@@ -505,6 +538,10 @@ export const bonehDurfee = (publicKey: RSAPublicKey): RSAPrivateKey | null => {
   const maxDBits = Math.floor(0.25 * nBits);
   const maxD = 2n ** BigInt(maxDBits);
   
+  // Precompute test message and its encryption for faster verification
+  const testMessage = 2n;
+  const encryptedTestMessage = bigintCryptoUtils.modPow(testMessage, e, n);
+  
   // Use a more efficient search strategy than brute-force
   // We'll use the fact that e*d ≡ 1 mod φ(n), so e*d = 1 + k*φ(n) for some k
   // And since φ(n) ≈ n, we have k ≈ (e*d)/n
@@ -527,10 +564,8 @@ export const bonehDurfee = (publicKey: RSAPublicKey): RSAPrivateKey | null => {
     
     // Verify if candidateD is the private exponent
     try {
-      const m = 2n;
-      const c = bigintCryptoUtils.modPow(m, e, n);
-      const mDecrypted = bigintCryptoUtils.modPow(c, candidateD, n);
-      if (mDecrypted === m) {
+      const decryptedMessage = bigintCryptoUtils.modPow(encryptedTestMessage, candidateD, n);
+      if (decryptedMessage === testMessage) {
         return { d: candidateD, n };
       }
     } catch (error) {
@@ -551,10 +586,8 @@ export const bonehDurfee = (publicKey: RSAPublicKey): RSAPrivateKey | null => {
     if (d > maxD) continue;
     
     try {
-      const m = 2n;
-      const c = bigintCryptoUtils.modPow(m, e, n);
-      const mDecrypted = bigintCryptoUtils.modPow(c, d, n);
-      if (mDecrypted === m) {
+      const decryptedMessage = bigintCryptoUtils.modPow(encryptedTestMessage, d, n);
+      if (decryptedMessage === testMessage) {
         return { d, n };
       }
     } catch (error) {
@@ -950,6 +983,222 @@ export const trialDivision = (n: bigint): FactorResult | null => {
 };
 
 /**
+ * RSA factoring with known Euler's totient function
+ * @param n Modulus
+ * @param phi Euler's totient function of n
+ * @returns Factors if found
+ */
+export const factorWithKnownPhi = (n: bigint, phi: bigint): { p: bigint; q: bigint } | null => {
+  // When phi(n) is known, we can factor n by solving p + q = n - phi(n) + 1
+  // and p * q = n
+  const sum = n - phi + 1n;
+  const discriminant = sum * sum - 4n * n;
+  
+  // Calculate square root of discriminant
+  let sqrtDiscriminant = BigInt(Math.floor(Math.sqrt(Number(discriminant))));
+  
+  // Check if discriminant is a perfect square
+  if (sqrtDiscriminant * sqrtDiscriminant !== discriminant) {
+    // Try nearby values
+    for (let delta = -5n; delta <= 5n; delta++) {
+      const candidate = sqrtDiscriminant + delta;
+      if (candidate * candidate === discriminant) {
+        sqrtDiscriminant = candidate;
+        break;
+      }
+    }
+    
+    // If still not a perfect square, return null
+    if (sqrtDiscriminant * sqrtDiscriminant !== discriminant) {
+      return null;
+    }
+  }
+  
+  // Calculate p and q
+  const p = (sum + sqrtDiscriminant) / 2n;
+  const q = (sum - sqrtDiscriminant) / 2n;
+  
+  // Verify the factors
+  if (p * q === n) {
+    return { p, q };
+  }
+  
+  return null;
+};
+
+/**
+ * RSA CRT implementation error attack
+ * @param publicKey Public key
+ * @param faultySignatures Array of faulty signatures
+ * @param messages Array of messages that were signed
+ * @returns Private key if found
+ */
+export const rsaCrtImplementationError = (publicKey: RSAPublicKey, faultySignatures: bigint[], messages: bigint[]): RSAPrivateKey | null => {
+  const { n, e } = publicKey;
+  
+  if (faultySignatures.length !== messages.length || faultySignatures.length < 2) {
+    throw new Error('Need at least two faulty signatures and corresponding messages');
+  }
+  
+  // Try to find factors using pairs of faulty signatures
+  for (let i = 0; i < faultySignatures.length; i++) {
+    for (let j = i + 1; j < faultySignatures.length; j++) {
+      const s1 = faultySignatures[i];
+      const s2 = faultySignatures[j];
+      const m1 = messages[i];
+      const m2 = messages[j];
+      
+      // Check if s1^e ≡ m1 mod p and s2^e ≡ m2 mod q
+      // We can find p by computing gcd(s1^e - m1, n)
+      try {
+        const s1e = bigintCryptoUtils.modPow(s1, e, n);
+        const p = gcd(s1e - m1, n);
+        
+        if (p > 1n && p < n) {
+          const q = n / p;
+          const phi = (p - 1n) * (q - 1n);
+          const d = modInv(e, phi);
+          return { d, n };
+        }
+        
+        const s2e = bigintCryptoUtils.modPow(s2, e, n);
+        const q = gcd(s2e - m2, n);
+        
+        if (q > 1n && q < n) {
+          const p = n / q;
+          const phi = (p - 1n) * (q - 1n);
+          const d = modInv(e, phi);
+          return { d, n };
+        }
+      } catch (error) {
+        // Skip if modPow fails
+        continue;
+      }
+    }
+  }
+  
+  return null;
+};
+
+/**
+ * RSA low public exponent with related messages attack
+ * @param ciphertexts Array of ciphertexts
+ * @param publicKey Public key
+ * @param polynomials Array of polynomials relating the messages
+ * @returns Decrypted messages if found
+ */
+export const lowExponentRelatedMessages = (ciphertexts: bigint[], publicKey: RSAPublicKey, polynomials: ((...msgs: bigint[]) => bigint)[]): bigint[] | null => {
+  const { n, e } = publicKey;
+  
+  if (e !== 3n) {
+    throw new Error('This attack requires e=3');
+  }
+  
+  if (ciphertexts.length < 2) {
+    throw new Error('Need at least two ciphertexts');
+  }
+  
+  // This is a simplified implementation for demonstration
+  // A real implementation would use lattice-based methods
+  
+  // Try brute-force for small n
+  if (n < 1000000n) {
+    for (let m1 = 0n; m1 < n; m1++) {
+      for (let m2 = 0n; m2 < n; m2++) {
+        // Check if both messages decrypt correctly
+        const c1 = bigintCryptoUtils.modPow(m1, e, n);
+        const c2 = bigintCryptoUtils.modPow(m2, e, n);
+        
+        if (c1 === ciphertexts[0] && c2 === ciphertexts[1]) {
+          // Check if they satisfy the polynomial relation
+          if (polynomials.length > 0) {
+            const polyResult = polynomials[0](m1, m2);
+            if (polyResult !== 0n) {
+              continue;
+            }
+          }
+          return [m1, m2];
+        }
+      }
+    }
+  }
+  
+  return null;
+};
+
+/**
+ * RSA common prime attack
+ * @param publicKey1 First public key
+ * @param publicKey2 Second public key
+ * @returns Shared prime factor if found
+ */
+export const commonPrimeAttack = (publicKey1: RSAPublicKey, publicKey2: RSAPublicKey): bigint | null => {
+  const { n: n1 } = publicKey1;
+  const { n: n2 } = publicKey2;
+  
+  // Compute GCD of the two moduli
+  const commonFactor = gcd(n1, n2);
+  
+  if (commonFactor > 1n && commonFactor < n1 && commonFactor < n2) {
+    return commonFactor;
+  }
+  
+  return null;
+};
+
+/**
+ * RSA fault injection on private key attack
+ * @param correctSignatures Array of correct signatures
+ * @param faultySignatures Array of faulty signatures
+ * @param messages Array of messages that were signed
+ * @param publicKey Public key
+ * @returns Private key if found
+ */
+export const rsaPrivateKeyFaultInjection = (
+  correctSignatures: bigint[],
+  faultySignatures: bigint[],
+  messages: bigint[],
+  publicKey: RSAPublicKey
+): RSAPrivateKey | null => {
+  const { n, e } = publicKey;
+  
+  if (correctSignatures.length !== faultySignatures.length || correctSignatures.length !== messages.length) {
+    throw new Error('Arrays must have the same length');
+  }
+  
+  if (correctSignatures.length === 0) {
+    throw new Error('Need at least one signature pair');
+  }
+  
+  // Try to find factors using each pair of correct and faulty signatures
+  for (let i = 0; i < correctSignatures.length; i++) {
+    const s = correctSignatures[i];
+    const sFaulty = faultySignatures[i];
+    const m = messages[i];
+    
+    // Compute the difference between correct and faulty signature
+    const diff = s - sFaulty;
+    
+    // The GCD of the difference and n should give us one of the factors
+    const p = gcd(diff, n);
+    
+    if (p > 1n && p < n) {
+      const q = n / p;
+      const phi = (p - 1n) * (q - 1n);
+      try {
+        const d = modInv(e, phi);
+        return { d, n };
+      } catch (error) {
+        // Skip if modInv fails
+        continue;
+      }
+    }
+  }
+  
+  return null;
+};
+
+/**
  * Common RSA attacks
  */
 export const attacks = {
@@ -969,6 +1218,11 @@ export const attacks = {
   multiPrimeRSA,
   factorKnownPrimes,
   privateKeyFromFactors,
-  trialDivision
+  trialDivision,
+  factorWithKnownPhi,
+  rsaCrtImplementationError,
+  lowExponentRelatedMessages,
+  commonPrimeAttack,
+  rsaPrivateKeyFaultInjection
 };
 

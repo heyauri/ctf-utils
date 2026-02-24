@@ -113,11 +113,7 @@ class CTFUtils {
 
         for (const [key, method] of Object.entries(methods)) {
             if (typeof method === 'function') {
-                methodMap[key] = async (...inputArgs: unknown[]) => {
-                    const input = inputArgs.length 
-                        ? [this.currTarget, ...inputArgs] 
-                        : [this.currTarget, ...this.args];
-                    
+                methodMap[key] = async () => {
                     return await method(this.currTarget);
                 };
             }
@@ -138,7 +134,7 @@ class CTFUtils {
 
         for (const [key, method] of Object.entries(methods)) {
             if (typeof method === 'function') {
-                methodMap[key] = (...inputArgs: unknown[]) => {
+                methodMap[key] = () => {
                     return method(this.currTarget);
                 };
             }

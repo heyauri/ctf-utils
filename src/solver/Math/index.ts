@@ -2,6 +2,8 @@
  * Math utilities for CTF challenges
  */
 
+import * as crypto from 'crypto';
+
 /**
  * Linear algebra utilities
  */
@@ -242,7 +244,8 @@ const isPrime = (n: bigint, k: number = 10): boolean => {
   
   // Test for k rounds
   for (let i = 0; i < k; i++) {
-    const a = 2n + BigInt(Math.floor(Math.random() * Number(n - 3n)));
+    // Generate random bigint without converting to Number
+    const a = 2n + randomBigintRange(1n, n - 3n);
     let x = modPow(a, d, n);
     
     if (x === 1n || x === n - 1n) continue;
@@ -262,6 +265,29 @@ const isPrime = (n: bigint, k: number = 10): boolean => {
   }
   
   return true;
+};
+
+/**
+ * Generate random bigint in range [min, max]
+ * @param min Minimum value (inclusive)
+ * @param max Maximum value (inclusive)
+ * @returns Random bigint in range
+ */
+const randomBigintRange = (min: bigint, max: bigint): bigint => {
+  const range = max - min + 1n;
+  const bits = range.toString(2).length;
+  const bytes = Math.ceil(bits / 8);
+  
+  let result: bigint;
+  do {
+    const randomBytes = crypto.randomBytes(bytes);
+    result = 0n;
+    for (let i = 0; i < bytes; i++) {
+      result = (result << 8n) + BigInt(randomBytes[i]);
+    }
+  } while (result >= range);
+  
+  return min + result;
 };
 
 /**
@@ -688,6 +714,7 @@ export {
   eulerTotient,
   mobiusFunction,
   findPrimitiveRoot,
+  randomBigintRange,
   
   // Combinatorics
   binomialCoefficient,

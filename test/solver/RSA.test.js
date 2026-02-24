@@ -2,7 +2,8 @@
  * RSA 模块测试
  */
 
-const { RSA } = require('../../lib/solver/index.js');
+const solver = require('../../lib/solver/index.js');
+const { RSA } = solver.Crypto;
 const { attacks } = RSA;
 
 console.log('【RSA 模块测试】');
@@ -149,6 +150,145 @@ try {
   console.log(`   n: ${n}`);
   console.log(`   因子分解结果: ${result ? `p=${result.p}, q=${result.q}` : '未找到因子'}`);
   console.log(`   ${result && result.p * result.q === n ? '✅' : '⚠️'} 测试完成`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试已知 phi(n) 的因子分解
+console.log('8. 测试已知 phi(n) 的因子分解');
+try {
+  const n = 3233n;
+  const phi = 3120n; // (61-1)*(53-1)
+  
+  const result = attacks.factorWithKnownPhi(n, phi);
+  console.log(`   n: ${n}`);
+  console.log(`   phi(n): ${phi}`);
+  console.log(`   因子分解结果: ${result ? `p=${result.p}, q=${result.q}` : '未找到因子'}`);
+  console.log(`   ${result && result.p * result.q === n ? '✅' : '❌'} 结果正确`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试共素数攻击
+console.log('9. 测试共素数攻击');
+try {
+  const p = 61n;
+  const q1 = 53n;
+  const q2 = 73n;
+  const n1 = p * q1;
+  const n2 = p * q2;
+  
+  const publicKey1 = { n: n1, e: 17n };
+  const publicKey2 = { n: n2, e: 23n };
+  
+  const result = attacks.commonPrimeAttack(publicKey1, publicKey2);
+  console.log(`   n1: ${n1}`);
+  console.log(`   n2: ${n2}`);
+  console.log(`   共素数结果: ${result}`);
+  console.log(`   ${result === p ? '✅' : '❌'} 结果正确`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试 Wiener's 攻击
+console.log('10. 测试 Wiener\'s 攻击');
+try {
+  // 使用小私钥的 RSA 密钥对
+  const n = 3337n;
+  const e = 17n;
+  const d = 2753n;
+  const publicKey = { n, e };
+  
+  const result = attacks.wiener(publicKey);
+  console.log(`   n: ${n}`);
+  console.log(`   e: ${e}`);
+  console.log(`   预期 d: ${d}`);
+  console.log(`   恢复的 d: ${result ? result.d : '未找到'}`);
+  console.log(`   ${result && result.d === d ? '✅' : '⚠️'} 测试完成`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试 Boneh-Durfee 攻击
+console.log('11. 测试 Boneh-Durfee 攻击');
+try {
+  // 使用小私钥的 RSA 密钥对
+  const n = 3337n;
+  const e = 17n;
+  const publicKey = { n, e };
+  
+  const result = attacks.bonehDurfee(publicKey);
+  console.log(`   n: ${n}`);
+  console.log(`   e: ${e}`);
+  console.log(`   恢复的私钥: ${result ? `d=${result.d}` : '未找到'}`);
+  console.log(`   ${result ? '✅' : '⚠️'} 测试完成`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试 Hastad's broadcast 攻击
+console.log('12. 测试 Hastad\'s broadcast 攻击');
+try {
+  // 使用三个不同的 RSA 密钥对，都使用 e=3
+  const publicKey1 = { n: 3233n, e: 3n };
+  const publicKey2 = { n: 3337n, e: 3n };
+  const publicKey3 = { n: 3557n, e: 3n };
+  const message = 123n;
+  
+  const ciphertext1 = RSA.encrypt(message, publicKey1);
+  const ciphertext2 = RSA.encrypt(message, publicKey2);
+  const ciphertext3 = RSA.encrypt(message, publicKey3);
+  
+  const result = attacks.hastadBroadcast([ciphertext1, ciphertext2, ciphertext3], [publicKey1, publicKey2, publicKey3]);
+  console.log(`   原始消息: ${message}`);
+  console.log(`   恢复的消息: ${result}`);
+  console.log(`   ${result === message ? '✅' : '❌'} 结果正确`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试低指数 CRT 攻击
+console.log('13. 测试低指数 CRT 攻击');
+try {
+  const publicKey = { n: 3233n, e: 3n };
+  const message = 123n;
+  const ciphertext = RSA.encrypt(message, publicKey);
+  
+  const result = attacks.lowExponentCRT(ciphertext, publicKey);
+  console.log(`   原始消息: ${message}`);
+  console.log(`   密文: ${ciphertext}`);
+  console.log(`   恢复的消息: ${result}`);
+  console.log(`   ${result === message ? '✅' : '❌'} 结果正确`);
+} catch (error) {
+  console.log(`   ❌ 测试失败: ${error.message}`);
+}
+
+console.log('');
+
+// 测试素数幂模数攻击
+console.log('14. 测试素数幂模数攻击');
+try {
+  const p = 11n;
+  const k = 3n;
+  const n = p ** k;
+  const publicKey = { n, e: 17n };
+  
+  const result = attacks.primePowerModulus(publicKey);
+  console.log(`   n: ${n} (${p}^${k})`);
+  console.log(`   因子分解结果: ${result ? `p=${result.p}, q=${result.q}` : '未找到因子'}`);
+  console.log(`   ${result && result.p === p && result.q === p ? '✅' : '❌'} 结果正确`);
 } catch (error) {
   console.log(`   ❌ 测试失败: ${error.message}`);
 }

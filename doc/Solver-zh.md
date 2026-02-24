@@ -5,56 +5,64 @@
 Solver 模块提供了用于解决 CTF 挑战的高级工具，包括密码学攻击、取证分析、二进制漏洞利用和数学工具。
 
 ## 目录
-- [RSA 模块](#rsa-模块)
+- [密码学模块](#密码学模块)
 - [取证模块](#取证模块)
 - [漏洞利用模块](#漏洞利用模块)
 - [数学模块](#数学模块)
+- [Web 模块](#web-模块)
+- [逆向工程模块](#逆向工程模块)
+- [分析模块](#分析模块)
+- [工具模块](#工具模块)
 
-## RSA 模块
+## 密码学模块
 
-RSA 模块提供了全面的 RSA 密码学挑战工具，包括密钥生成、加密/解密和常见攻击。
+密码学模块提供了全面的密码学挑战工具，包括 RSA 密码学和哈希攻击。
 
-### RSA 功能
+### RSA 子模块
+
+RSA 子模块提供了用于 RSA 密码学挑战的工具，包括密钥生成、加密/解密和常见攻击。
+
+#### RSA 功能
 
 - **密钥生成** - 生成具有可配置位长度的 RSA 密钥对
 - **加密/解密** - 基本 RSA 加密和解密，带有 CRT 优化
 - **常见攻击** - 各种 RSA 攻击方法的实现
 - **实用函数** - 素数检测、密钥强度评估等
 
-### RSA 使用示例
+#### RSA 使用示例
 
 ```javascript
 const { solver } = require("ctf-utils");
 
 // 生成 RSA 密钥对
-const keyPair = await solver.RSA.generateKeyPair(512);
+const keyPair = await solver.Crypto.RSA.generateKeyPair(512);
 console.log(keyPair.publicKey);
 console.log(keyPair.privateKey);
 
 // 加密和解密消息
 const message = "Hello, RSA!";
-const encrypted = solver.RSA.encrypt(message, keyPair.publicKey);
-const decrypted = solver.RSA.decrypt(encrypted, keyPair.privateKey);
+const encrypted = solver.Crypto.RSA.encrypt(message, keyPair.publicKey);
+const decrypted = solver.Crypto.RSA.decrypt(encrypted, keyPair.privateKey);
 console.log(decrypted); // "Hello, RSA!"
 
 // 评估密钥强度
-const strength = solver.RSA.evaluateKeyStrength(keyPair.publicKey.n);
+const strength = solver.Crypto.RSA.evaluateKeyStrength(keyPair.publicKey.n);
 console.log(strength); // { keySize: 512, strength: "Weak" }
 
 // 运行小指数攻击 (e=3)
 const n = 3233n; // 61 * 53
 const e = 3n;
 const ciphertext = 2790n;
-const plaintext = solver.RSA.attacks.smallExponent(ciphertext, { n, e });
+const plaintext = solver.Crypto.RSA.attacks.smallExponent(ciphertext, { n, e });
 console.log(plaintext); // 42n
 
 // 运行 Coppersmith 小根攻击
 const polynomial = (x) => x - 42n;
-const root = solver.RSA.attacks.coppersmith(n, polynomial, 0.5);
+const root = solver.Crypto.RSA.attacks.coppersmith(n, polynomial, 0.5);
 console.log(root); // 42n
 ```
 
-### 支持的 RSA 攻击
+#### 支持的 RSA 攻击
 
 | 攻击 | 描述 |
 |------|------|
@@ -69,6 +77,198 @@ console.log(root); // 42n
 | factorKnownPrimes | 使用已知 p 和 q 分解 n |
 | privateKeyFromFactors | 从素数因子计算私钥 |
 | trialDivision | 小因子试除法 |
+
+### Hash 子模块
+
+Hash 子模块提供了用于哈希分析和攻击的工具，包括哈希生成、破解和碰撞检测。
+
+#### Hash 功能
+
+- **哈希生成** - 使用 MD5、SHA1、SHA256、SHA512 算法生成哈希
+- **暴力破解** - 使用可配置字符集的哈希暴力破解
+- **字典攻击** - 基于字典的哈希破解
+- **彩虹表攻击** - 基于彩虹表的哈希破解
+- **哈希碰撞** - 查找哈希碰撞
+- **哈希前缀生成** - 生成具有指定前缀的哈希
+- **哈希长度扩展** - 执行哈希长度扩展攻击
+- **哈希类型分析** - 基于长度和模式分析哈希类型
+
+#### Hash 使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 生成哈希
+const md5Hash = solver.Crypto.Hash.md5("test");
+const sha1Hash = solver.Crypto.Hash.sha1("test");
+console.log(md5Hash, sha1Hash);
+
+// 暴力破解哈希
+const plaintext = "abc";
+const hash = solver.Crypto.Hash.md5(plaintext);
+const result = solver.Crypto.Hash.bruteForceHash(hash, "abcdefghijklmnopqrstuvwxyz", 3);
+console.log(result); // "abc"
+
+// 分析哈希类型
+const hashToAnalyze = "5d41402abc4b2a76b9719d911017c592";
+const algorithms = solver.Crypto.Hash.analyzeHashType(hashToAnalyze);
+console.log(algorithms); // ["MD5"]
+
+// 生成指定前缀的哈希
+const prefix = "00";```javascript
+const input = solver.Crypto.Hash.generateHashWithPrefix(prefix, 2);
+const generatedHash = solver.Crypto.Hash.md5(input);
+console.log(input, generatedHash);
+```
+
+## Web 模块
+
+Web 模块提供了用于分析 HTTP 请求/响应和检测 Web 安全漏洞的工具。
+
+### HTTP 子模块
+
+HTTP 子模块提供了用于解析和分析 HTTP 请求和响应的工具。
+
+#### HTTP 功能
+
+- **请求解析** - 将 HTTP 请求解析为结构化对象
+- **响应解析** - 将 HTTP 响应解析为结构化对象
+- **安全分析** - 分析 HTTP 消息中的安全问题
+- **请求/响应生成** - 从结构化数据生成 HTTP 消息
+
+#### HTTP 使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 解析 HTTP 请求
+const requestString = 'GET /api/users HTTP/1.1\r\nHost: example.com\r\nUser-Agent: Mozilla/5.0\r\nAccept: */*\r\n\r\n';
+const request = solver.Web.HTTP.HTTPAnalyzer.parseRequest(requestString);
+console.log(request.method, request.path, request.headers);
+
+// 解析 HTTP 响应
+const responseString = 'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 13\r\n\r\n{"status":"ok"}';
+const response = solver.Web.HTTP.HTTPAnalyzer.parseResponse(responseString);
+console.log(response.statusCode, response.statusMessage, response.body);
+
+// 分析请求安全
+const securityIssues = solver.Web.HTTP.HTTPAnalyzer.analyzeRequestSecurity(request);
+console.log(securityIssues);
+```
+
+### Security 子模块
+
+Security 子模块提供了用于分析 Web 安全问题的工具，包括 JWT 令牌、CSRF 令牌和 XSS 漏洞。
+
+#### Security 功能
+
+- **JWT 分析** - 解析和验证 JWT 令牌
+- **CSRF 令牌分析** - 分析 CSRF 令牌安全性
+- **XSS 有效载荷生成** - 生成 XSS 测试有效载荷
+- **XSS 检测** - 检测 HTML 中的 XSS 漏洞
+- **会话管理分析** - 分析会话 cookie 安全性
+- **SQL 注入检测** - 检测 SQL 注入模式
+
+#### Security 使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 解析 JWT 令牌
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJleHAiOjk5OTk5OTk5OX0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+const jwt = solver.Web.Security.WebSecurity.parseJWT(token);
+console.log(jwt.header, jwt.payload);
+
+// 验证 JWT 令牌
+const secret = 'secret';
+const isValid = solver.Web.Security.WebSecurity.verifyJWT(token, secret);
+console.log(isValid);
+
+// 生成 XSS 有效载荷
+const xssType = 'stored';
+const payloads = solver.Web.Security.WebSecurity.generateXSSPayloads(xssType);
+console.log(payloads);
+```
+
+## 逆向工程模块
+
+逆向工程模块提供了用于分析二进制文件和控制流图的工具。
+
+### 逆向工程功能
+
+- **控制流分析** - 分析二进制文件的控制流图
+- **二进制反汇编** - 将二进制代码反汇编为汇编指令
+- **函数识别** - 识别二进制文件中的函数
+- **调用图生成** - 为二进制文件生成调用图
+- **字符串分析** - 从二进制文件中提取和分析字符串
+- **符号分析** - 分析二进制文件中的导入/导出符号
+- **二进制结构分析** - 分析二进制文件结构 (ELF, PE)
+- **安全分析** - 分析二进制文件的安全特性 (canary, PIE, NX)
+- **漏洞分析** - 检测二进制文件中的潜在漏洞
+
+### 逆向工程使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 分析控制流图
+const cflow = solver.ReverseEngineering.BinaryAnalysis.analyzeControlFlow('program');
+console.log(cflow.functions);
+
+// 反汇编二进制代码
+const instructions = solver.ReverseEngineering.BinaryAnalysis.disassembleBinary('program', '0x08048000', '0x08048100');
+console.log(instructions);
+
+// 分析二进制结构
+const structure = solver.ReverseEngineering.BinaryAnalysis.analyzeBinaryStructure('program');
+console.log(structure.format, structure.architecture, structure.sections);
+```
+
+## 分析模块
+
+分析模块提供了用于密码分析和频率分析的工具。
+
+### 分析功能
+
+- **频率分析** - 分析密文中的字符频率
+- **密码分析工具** - 用于破解经典密码的工具
+
+### 分析使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 频率分析
+const ciphertext = 'GUR DHVPX OEBJA QBT WHZCRQ BIRE GUR YNML SBK.';
+const analysis = solver.Analysis.FrequencyAnalysis.analyze(ciphertext);
+console.log(analysis);
+
+// 英语字母频率比较
+const englishFreq = solver.Analysis.FrequencyAnalysis.englishFrequencies;
+console.log(englishFreq);
+```
+
+## 工具模块
+
+工具模块提供了用于 CTF 挑战的实用函数，包括字典生成。
+
+### 工具功能
+
+- **字典生成** - 生成用于暴力破解的字典
+- **通用工具** - 各种用于 CTF 挑战的实用函数
+
+### 工具使用示例
+
+```javascript
+const { solver } = require("ctf-utils");
+
+// 生成字典
+const charset = 'abcdefghijklmnopqrstuvwxyz';
+const minLength = 1;
+const maxLength = 3;
+const dictionary = solver.Utils.DictionaryGenerator.generate(charset, minLength, maxLength);
+console.log(dictionary);
+```
 
 ## 取证模块
 

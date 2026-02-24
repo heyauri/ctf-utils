@@ -117,24 +117,15 @@ export const randomBigint = async (bitLength: number): Promise<bigint> => {
 };
 
 /**
- * Calculate modular exponentiation (manual implementation for educational purposes)
+ * Calculate modular exponentiation
  * @param base Base
  * @param exponent Exponent
  * @param modulus Modulus
  * @returns (base^exponent) mod modulus
  */
 export const modPow = (base: bigint, exponent: bigint, modulus: bigint): bigint => {
-  if (modulus === 1n) return 0n;
-  let result = 1n;
-  base = base % modulus;
-  while (exponent > 0n) {
-    if (exponent % 2n === 1n) {
-      result = (result * base) % modulus;
-    }
-    base = (base * base) % modulus;
-    exponent = exponent / 2n;
-  }
-  return result;
+  // 使用bigintCryptoUtils的实现，它可能更高效
+  return bigintCryptoUtils.modPow(base, exponent, modulus);
 };
 
 /**

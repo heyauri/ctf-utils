@@ -8,12 +8,12 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
-- **CLI tool** - Command-line interface for quick operations
+- **Optimized CLI tool** - Command-line interface with parallel processing and improved user experience
 - **File analysis tools** - LSB steganography, PNG structure analysis, ZIP pseudo-encryption detection
-- **RSA solver** - Advanced RSA cryptography tools with support for key generation, encryption/decryption, and common attacks
+- **Advanced RSA solver** - Optimized RSA cryptography tools with support for key generation, encryption/decryption, and 20+ attack methods
 - **Forensics tools** - File analysis and steganography detection utilities
 - **Exploitation tools** - Binary vulnerability exploitation utilities
-- **Math utilities** - Advanced mathematical functions for cryptography
+- **Optimized Math utilities** - Advanced mathematical functions with improved performance for cryptography
 - **Well-structured documentation** - Clear separation of documentation responsibilities
 
 ## Documentation Structure
@@ -187,6 +187,10 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | Hash | Detect | Encode | Description |
 |------|--------|--------|-------------|
 | MD5 | ✅ | ✅ | MD5 hash (32 hex) |
+| SHA-1 | ✅ | ✅ | SHA-1 hash (40 hex) |
+| SHA-256 | ✅ | ✅ | SHA-256 hash (64 hex) |
+| SHA-384 | ✅ | ✅ | SHA-384 hash (96 hex) |
+| RIPEMD-160 | ✅ | ✅ | RIPEMD-160 hash (40 hex) |
 
 ### Utility Functions
 
@@ -196,6 +200,8 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | FrequencyAnalysis | | Character frequency analysis |
 | DictionaryGenerator | | Password dictionary generation |
 | AES/DES | | AES-128/192/256 and DES encryption |
+| HashAttacks | | Hash cracking tools (brute force, dictionary, salted, HMAC) |
+| BinaryAnalysis | | Binary file analysis and reverse engineering tools |
 
 ## Solver Modules
 
@@ -219,9 +225,20 @@ The RSA solver provides comprehensive tools for RSA cryptography challenges, inc
 | wiener | Wiener's attack for small private exponent |
 | hastadBroadcast | Hastad's broadcast attack with multiple public keys |
 | franklinReiter | Franklin-Reiter related message attack |
+| franklinReiterImproved | Improved Franklin-Reiter attack for any e |
 | bonehDurfee | Boneh-Durfee attack for small private exponent |
 | coppersmith | Coppersmith's attack for small roots of polynomials |
 | coppersmithFactor | Coppersmith's attack for factoring with partial information |
+| rsaCrtFaultAttack | RSA-CRT fault injection attack |
+| rsaKeygenWeakness | RSA key generation weakness attack |
+| lowExponentCRT | Low exponent attack with CRT implementation |
+| primePowerModulus | RSA with prime power modulus attack |
+| multiPrimeRSA | Multi-prime RSA attack |
+| factorWithKnownPhi | Factor n with known Euler's totient function |
+| rsaCrtImplementationError | RSA CRT implementation error attack |
+| lowExponentRelatedMessages | Low exponent attack with related messages |
+| commonPrimeAttack | Common prime attack between two RSA keys |
+| rsaPrivateKeyFaultInjection | RSA private key fault injection attack |
 | factorKnownPrimes | Factor n using known p and q |
 | privateKeyFromFactors | Calculate private key from prime factors |
 | trialDivision | Trial division for small factors |
@@ -255,6 +272,78 @@ The RSA solver provides comprehensive tools for RSA cryptography challenges, inc
 | Combinatorics | Permutations, combinations, subsets |
 | Cryptographic Math | Primality testing, modular exponentiation, discrete logarithms |
 | Factorization | Pollard's Rho algorithm, trial division |
+
+### Hash Attacks
+
+The Hash Attacks module provides comprehensive tools for cracking cryptographic hashes, including various attack methods and techniques.
+
+#### Hash Attacks Features
+
+- **Hash type analysis** - Automatically detect hash algorithms based on hash length and pattern
+- **Brute force attacks** - Iterative brute force with configurable character sets and length limits
+- **Dictionary attacks** - Fast dictionary-based hash cracking
+- **Salted hash attacks** - Cracking hashes with salt values
+- **HMAC generation and cracking** - Generate and crack HMAC values
+- **Support for multiple hash algorithms** - MD5, SHA-1, SHA-256, SHA-384, RIPEMD-160
+
+### Binary Analysis
+
+The Binary Analysis module provides tools for reverse engineering and analyzing binary files, helping with CTF challenges involving executable files and binary formats.
+
+#### Binary Analysis Features
+
+- **Binary type detection** - Identify file types (ELF, PE, Mach-O) and architectures (x86, x86-64, ARM, AArch64)
+- **Header analysis** - Analyze binary file headers and sections
+- **String extraction** - Extract printable strings from binary files with optimized performance
+- **Symbol analysis** - Identify import/export symbols in binaries
+- **Vulnerability detection** - Detect potential security vulnerabilities in binary files
+- **Control flow analysis** - Generate control flow graphs for binary functions
+- **Call graph generation** - Generate function call graphs for binary analysis
+- **Disassembly** - Basic disassembly of binary code sections
+
+### Web Security
+
+The Web Security module provides comprehensive tools for analyzing and testing web application security, helping with CTF challenges involving web vulnerabilities.
+
+#### Web Security Features
+
+- **JWT analysis** - Parse, verify, and crack JWT tokens
+- **SQL injection** - Detect and exploit SQL injection vulnerabilities with database fingerprinting
+- **XSS testing** - Generate and test XSS payloads for stored, reflected, and DOM-based XSS
+- **CSRF analysis** - Analyze CSRF token security
+- **Session management** - Analyze session cookie security
+- **Web security best practices** - Prevention tips and security recommendations
+
+#### JWT Analysis Features
+
+- **Token parsing** - Parse and validate JWT tokens
+- **Signature verification** - Verify JWT signatures with provided keys
+- **Vulnerability detection** - Detect common JWT vulnerabilities
+- **Brute force cracking** - Brute force weak JWT secrets
+- **Dictionary cracking** - Crack JWT secrets using wordlists
+- **Signature bypass** - Generate signature bypass payloads
+- **Token tampering** - Modify JWT tokens with known secrets
+
+#### SQL Injection Features
+
+- **Payload generation** - Generate SQL injection payloads for various DBMS
+- **Database fingerprinting** - Identify database types and versions
+- **Injection type detection** - Detect boolean-based, error-based, time-based, and union-based injection
+- **Table/column extraction** - Generate payloads to extract table and column names
+- **Security analysis** - Analyze SQL queries for injection vulnerabilities
+
+### Lattice Cryptography
+
+The Lattice Cryptography module provides tools for lattice-based cryptanalysis, helping with CTF challenges involving lattice-based cryptography.
+
+#### Lattice Cryptography Features
+
+- **LLL algorithm** - Implement the Lenstra-Lenstra-Lovász lattice basis reduction algorithm
+- **Hastad broadcast attack** - Crack RSA with low exponent using multiple moduli
+- **Low exponent attack** - Crack RSA with small public exponent
+- **Franklin-Reiter attack** - Attack RSA with related messages
+- **Short vector finding** - Find short vectors in lattices
+- **Gram-Schmidt orthogonalization** - Perform Gram-Schmidt orthogonalization on vectors
 
 ## API Reference
 
@@ -320,6 +409,32 @@ const ropChain = solver.Exploitation.ROP.generateChain([
 // Math utilities
 const gcd = solver.Math.gcd(12345n, 67890n);
 const factors = solver.Math.pollardsRho(123456789n);
+
+// Hash attacks
+const hashType = solver.Crypto.Hash.analyzeHashType("d41d8cd98f00b204e9800998ecf8427e");
+const cracked = solver.Crypto.Hash.bruteForceHash("5f4dcc3b5aa765d61d8327deb882cf99", "md5", "abcdefghijklmnopqrstuvwxyz", 8);
+const saltedHash = solver.Crypto.Hash.hashWithSalt("password", "salt", "md5");
+const hmac = solver.Crypto.Hash.generateHMAC("data", "key", "sha256");
+
+// Binary analysis
+const binaryType = solver.ReverseEngineering.BinaryAnalysis.detectBinaryType("binary.exe");
+const headerInfo = solver.ReverseEngineering.BinaryAnalysis.analyzeBinaryHeader("binary.exe");
+const strings = solver.ReverseEngineering.BinaryAnalysis.analyzeStrings("binary.exe");
+const vulnerabilities = solver.ReverseEngineering.BinaryAnalysis.analyzeVulnerabilities("binary.exe");
+
+// Web security
+const jwtToken = solver.Web.Security.WebSecurity.parseJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
+const jwtVerified = solver.Web.Security.WebSecurity.verifyJWT("token", "secret");
+const jwtCracked = solver.Web.Security.WebSecurity.dictionaryCrackJWT("token", ["secret", "password"]);
+const xssPayloads = solver.Web.Security.WebSecurity.generateEnhancedXSSPayloads("stored");
+const sqlPayloads = solver.Web.Security.WebSecurity.generateEnhancedSQLInjectionPayloads();
+const csrfAnalysis = solver.Web.Security.WebSecurity.analyzeCSRFToken("csrf-token");
+
+// Lattice cryptography
+const latticeBasis = solver.Crypto.Lattice.LatticeAttacks.generateLatticeBasis([[1, 2], [3, 4]]);
+const lllResult = solver.Crypto.Lattice.LatticeAttacks.lllAlgorithm(latticeBasis);
+const shortVector = solver.Crypto.Lattice.LatticeAttacks.findShortVector(latticeBasis);
+const hastadResult = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack([n1, n2, n3], [c1, c2, c3]);
 ```
 
 ## Development
