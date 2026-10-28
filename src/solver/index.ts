@@ -22,11 +22,15 @@ import * as Analysis from "./Analysis";
 import * as ReverseEngineering from "./ReverseEngineering";
 import * as Types from "./types";
 
+/** Shortcut alias: solver.RSA === solver.Crypto.RSA */
+const RSA = Crypto.RSA;
+
 /**
  * Solver modules namespace
  */
 export {
   Crypto,
+  RSA,
   Exploitation,
   Math,
   Forensics,
@@ -42,6 +46,7 @@ export {
  */
 export default {
   Crypto,
+  RSA,
   Exploitation,
   Math,
   Forensics,

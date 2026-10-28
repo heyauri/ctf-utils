@@ -354,11 +354,11 @@ const { solver } = require("ctf-utils");
 
 // Frequency analysis
 const ciphertext = 'GUR DHVPX OEBJA QBT WHZCRQ BIRE GUR YNML SBK.';
-const analysis = solver.Analysis.FrequencyAnalysis.analyze(ciphertext);
+const analysis = solver.Analysis.FrequencyAnalysis.analyzeFrequency(ciphertext);
 console.log(analysis);
 
 // English letter frequency comparison
-const englishFreq = solver.Analysis.FrequencyAnalysis.englishFrequencies;
+const englishFreq = solver.Analysis.FrequencyAnalysis.EnglishFrequency;
 console.log(englishFreq);
 ```
 
@@ -381,7 +381,7 @@ const { solver } = require("ctf-utils");
 const charset = 'abcdefghijklmnopqrstuvwxyz';
 const minLength = 1;
 const maxLength = 3;
-const dictionary = solver.Utils.DictionaryGenerator.generate(charset, minLength, maxLength);
+const dictionary = solver.Utils.DictionaryGenerator.generateDictionary({ charset, minLength, maxLength });
 console.log(dictionary);
 
 // QR code parsing
@@ -474,28 +474,30 @@ The Exploitation module provides tools for binary exploitation, including ROP ch
 const { solver } = require("ctf-utils");
 
 // ROP chain generation
-const ropChain = solver.Exploitation.ROP.generateChain([
-  { address: 0xdeadbeef, args: [0x1234, 0x5678] },
-  { address: 0xcafebabe, args: [0x9abc] }
-]);
+const ropChain = solver.Exploitation.generateROPChain(
+  [
+    { address: "0xdeadbeef", description: "pop rdi; ret" },
+    { address: "0xcafebabe", description: "pop rsi; ret" }
+  ],
+  "0xdeadbeef",
+  ["0x1234", "0x5678"]
+);
 console.log(ropChain);
 
-// Buffer overflow offset calculation
-const pattern = solver.Exploitation.BufferOverflow.generatePattern(200);
-// After crashing program with pattern
-const offset = solver.Exploitation.BufferOverflow.findOffset("0x41424344");
-console.log("Buffer overflow offset:", offset);
+// Buffer overflow payload generation
+const payload = solver.Exploitation.generateBufferOverflow(200, 112, "0xdeadbeef");
+console.log("Buffer overflow payload:", payload);
 
 // Shellcode generation
-const shellcode = solver.Exploitation.Shellcode.generate("x86", "linux", "execve");
+const shellcode = solver.Exploitation.generateShellcode("execve", { arch: "x86", os: "linux" });
 console.log(shellcode);
 
 // Format string vulnerability analysis
-const formatStringInfo = solver.Exploitation.FormatString.analyze("%x.%x.%x");
+const formatStringInfo = solver.Exploitation.analyzeFormatString("%x.%x.%x");
 console.log(formatStringInfo);
 
 // Binary structure analysis
-const binaryInfo = solver.Exploitation.BinaryFile.analyze("program");
+const binaryInfo = solver.Exploitation.analyzeBinaryStructure("program");
 console.log(binaryInfo);
 ```
 

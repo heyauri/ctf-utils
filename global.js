@@ -1012,6 +1012,11 @@ async function detectAction(Input) {
  */
 async function encodeAction(method, Input, options) {
     const { key } = options;
+    if (typeof encode[method] !== 'function') {
+        console.error(chalk.red(`Error: unknown encode method "${method}"`));
+        console.error(chalk.yellow(`Available methods: ${Object.keys(encode).join(', ')}`));
+        return;
+    }
     try {
         let result;
         if (key) {
@@ -1030,6 +1035,11 @@ async function encodeAction(method, Input, options) {
  */
 async function decodeAction(method, Input, options) {
     const { key } = options;
+    if (typeof decode[method] !== 'function') {
+        console.error(chalk.red(`Error: unknown decode method "${method}"`));
+        console.error(chalk.yellow(`Available methods: ${Object.keys(decode).join(', ')}`));
+        return;
+    }
     try {
         let result;
         if (key) {

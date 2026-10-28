@@ -41,10 +41,31 @@ const de_HTML = (str: string): string => {
     return result;
 };
 
-const en_HTML = (str: string): string => {
-    return str.replace(/[\u00A0-\uFFFF]/g, (char) => {
-        return '&#' + char.charCodeAt(0) + ';';
-    });
+const en_HTML = (str: string, mode: string = 'named'): string => {
+    if (mode === 'decimal' || mode === 'hexadecimal') {
+        let result = '';
+        for (const char of str) {
+            const code = char.charCodeAt(0);
+            if (code > 0x7E || code < 0x20) {
+                result += char;
+            } else if (mode === 'decimal') {
+                result += '&#' + code + ';';
+            } else {
+                result += '&#x' + code.toString(16).toUpperCase() + ';';
+            }
+        }
+        return result;
+    }
+    // Named mode: escape HTML special characters, then non-ASCII as decimal entities
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+        .replace(/[\u00A0-\uFFFF]/g, (char) => {
+            return '&#' + char.charCodeAt(0) + ';';
+        });
 };
 
 export {

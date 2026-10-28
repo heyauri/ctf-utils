@@ -306,7 +306,7 @@ detect.BinStr(str: string): boolean
 **示例：**
 ```javascript
 detect.BinStr('01001000 01100101');  // true
-detect.BinStr('01001000');           // false (长度至少8位)
+detect.BinStr('01001000');           // true
 ```
 
 #### 10. OCT 检测
@@ -480,7 +480,7 @@ detect.ADFGVX(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.ADFGVX('ADVDFA DGAVV');  // true
+detect.ADFGVX('DDGAXDFAGF');  // true
 detect.ADFGVX('Hello');         // false
 ```
 
@@ -490,8 +490,8 @@ detect.AES(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.AES('U2FsdGVkX1+==');  // true (OpenSSL格式)
-detect.AES('Salted__');        // true (OpenSSL盐值前缀)
+detect.AES('bae0ceca385aaf65a9b3355443d50d95:21f5ab2ef921aa2d44fabdc8e8baca91');  // true (iv:cipher 十六进制格式)
+detect.AES('Hello');  // false
 detect.AES('Hello');            // false
 ```
 
@@ -522,8 +522,7 @@ detect.JQ(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.JQ('.foo');              // true
-detect.JQ('.[]');               // true
+detect.JQ('"\'"\' ""i');        // true (JQ 引号编码)
 detect.JQ('Hello');             // false
 ```
 
@@ -533,7 +532,7 @@ detect.Wubi(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.Wubi('gggk');            // true (五笔编码)
+detect.Wubi('你好');            // true (包含中文字符，可进行五笔编码)
 detect.Wubi('hello');           // false
 ```
 
@@ -543,7 +542,7 @@ detect.Pinyin(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.Pinyin('ni hao');        // true (带声调: nǐ hǎo)
+detect.Pinyin('你好');          // true (包含中文字符，可进行拼音编码)
 detect.Pinyin('nihao');         // false
 ```
 
@@ -553,7 +552,7 @@ detect.SimpleSub(str: string): boolean
 ```
 **示例：**
 ```javascript
-detect.SimpleSub('Khoor');      // true (可能是简单替换)
+detect.SimpleSub('Khoor Zruog');  // 注意：检测基于词频相关性，短文本可能返回 false
 detect.SimpleSub('Hello');      // false
 ```
 
@@ -766,317 +765,184 @@ console.log('评分:', best[0].score);
 
 ---
 
-## 频率分析工具 (新增)
+## 频率分析工具
 
-提供字符频率统计和索引重合分析功能。
+提供字符频率统计、重合指数分析和英语频率对比功能。位于 `solver.Analysis.FrequencyAnalysis`。
 
 ### 字符频率分析
 ```javascript
-FrequencyAnalysis.analyze(text: string): {
-    letters: { [char: string]: number },
-    bigrams: { [bigram: string]: number },
-    trigrams: { [trigram: string]: number },
-    ic: number,
+FrequencyAnalysis.analyzeFrequency(text: string): {
+    totalChars: number,
+    frequencies: { char: string, count: number, frequency: number, englishFrequency: number, difference: number }[],
+    topChars: { char: string, count: number, frequency: number }[],
     chiSquared: number
 }
 ```
 **返回值：**
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| letters | object | 单字符频率统计 |
-| bigrams | object | 双字符组合频率 |
-| trigrams | object | 三字符组合频率 |
-| ic | number | Index of Coincidence (重合指数) |
-| chiSquared | number | 卡方统计值 |
+| totalChars | number | 总字符数（仅统计字母） |
+| frequencies | array | 每个字符的计数、频率及与英语频率的差值 |
+| topChars | array | 按频率排序的最频繁字符 |
+| chiSquared | number | 与英语频率对比的卡方统计值 |
 
 **示例：**
 ```javascript
-const result = FrequencyAnalysis.analyze('Hello World');
+const { solver } = require('ctf-utils');
+const FrequencyAnalysis = solver.Analysis.FrequencyAnalysis;
 
-console.log('H 的频率:', result.letters['H']);
-console.log('He 的频率:', result.bigrams['He']);
-console.log('Hel 的频率:', result.trigrams['Hel']);
-console.log('重合指数:', result.ic);
+const result = FrequencyAnalysis.analyzeFrequency('Hello World');
+console.log('总字符数:', result.totalChars);
+console.log('最频繁字符:', result.topChars[0]);
 console.log('卡方值:', result.chiSquared);
+```
+
+### 与英语频率对比
+```javascript
+FrequencyAnalysis.compareWithEnglish(text: string): { char: string, actual: number, expected: number, difference: number }[]
+```
+**描述：** 返回每个字母的实际频率与标准英语频率的对比。
+
+**示例：**
+```javascript
+const compare = FrequencyAnalysis.compareWithEnglish('Hello World');
+console.log(compare);
+```
+
+### 获取最频繁字符
+```javascript
+FrequencyAnalysis.getMostFrequentChars(text: string, n?: number): string[]
+```
+**示例：**
+```javascript
+const top = FrequencyAnalysis.getMostFrequentChars('Hello World', 3);
+console.log(top);
+// ['L', 'O', 'H']
+```
+
+### 计算重合指数
+```javascript
+FrequencyAnalysis.calculateIC(text: string): number
+```
+**描述：** 计算 Index of Coincidence（重合指数），可用于判断文本是否为自然语言或辅助分析 Vigenere 密钥长度。
+
+**示例：**
+```javascript
+const ic = FrequencyAnalysis.calculateIC('Hello World');
+console.log('重合指数:', ic);
 ```
 
 ### 判断语言类型
 ```javascript
-FrequencyAnalysis.detectLanguage(text: string): {
-    likely: string,
-    scores: { [language: string]: number }
-}
+FrequencyAnalysis.detectLanguage(text: string): { language: string, confidence: number }
 ```
-**返回值：**
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| likely | string | 最可能的语言 (english/chinese/nonsense) |
-| scores | object | 各语言评分 |
+**描述：** 基于重合指数的粗略启发式判断，返回 `English` / `Unknown Indo-European` / `Non-natural language` 之一。
 
 **示例：**
 ```javascript
-const lang = FrequencyAnalysis.detectLanguage('The quick brown fox');
-console.log('最可能语言:', lang.likely);
-// 'english'
-
-const lang2 = FrequencyAnalysis.detectLanguage('Xyzw qnop rstu');
-console.log('最可能语言:', lang2.likely);
-// 'nonsense'
+const lang = FrequencyAnalysis.detectLanguage('The quick brown fox jumps over the lazy dog');
+console.log(lang);
 ```
 
-### 判断是否为明文
+### 英语字母频率表
 ```javascript
-FrequencyAnalysis.isReadable(text: string, threshold?: number): boolean
+FrequencyAnalysis.EnglishFrequency: { [letter: string]: number }
 ```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| text | string | 要检测的文本 |
-| threshold | number | 判定阈值 (默认 0.06) |
-
 **示例：**
 ```javascript
-FrequencyAnalysis.isReadable('The quick brown fox');
-// true
-
-FrequencyAnalysis.isReadable('Xyzw qnop rstu');
-// false
-```
-
-### 破解凯撒密码
-```javascript
-FrequencyAnalysis.caesarBrute(text: string): {
-    shift: number,
-    decrypted: string,
-    score: number
-}[]
-```
-**描述：** 分析所有 25 种移位，返回最可能的解密结果（按评分排序）。
-
-**示例：**
-```javascript
-const results = FrequencyAnalysis.caesarBrute('Khoor Zruog');
-// [
-//   { shift: 3, decrypted: 'Hello World', score: 0.95 },
-//   { shift: 10, decrypted: 'Vybqb Bqyxb', score: 0.12 },
-//   ...
-// ]
-
-console.log('最佳移位:', results[0].shift);
-// 3
-console.log('解密结果:', results[0].decrypted);
-// 'Hello World'
-```
-
-### Vigenere 密钥长度分析
-```javascript
-FrequencyAnalysis.vigenereKeyLength(text: string): number[]
-```
-**描述：** 基于重合指数分析可能的密钥长度。
-
-**示例：**
-```javascript
-const lengths = FrequencyAnalysis.vigenereKeyLength('DLHY SBMRA...');
-console.log('可能的密钥长度:', lengths);
-// [5, 10, 15, ...]
-```
-
-### Vigenere 密钥破解
-```javascript
-FrequencyAnalysis.vigenereKey(text: string, keyLength: number): string
-```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| text | string | 加密文本 |
-| keyLength | number | 密钥长度 |
-
-**示例：**
-```javascript
-const key = FrequencyAnalysis.vigenereKey('Ciphertext', 5);
-console.log('破解的密钥:', key);
-// 'KEYKE'
-```
-
-### 全自动 Vigenere 破解
-```javascript
-FrequencyAnalysis.vigenereCrack(text: string): {
-    key: string,
-    decrypted: string
-}
-```
-**描述：** 自动分析密钥长度并破解 Vigenere 密码。
-
-**示例：**
-```javascript
-const result = FrequencyAnalysis.vigenereCrack('RIJVS UYVJN...');
-console.log('密钥:', result.key);
-// 'KEY'
-console.log('明文:', result.decrypted);
-// 'HELLOWORLD'
-```
-
-### 最佳 XOR 密钥猜测
-```javascript
-FrequencyAnalysis.bestXORKey(input: string | Buffer, keyLength?: number): {
-    key: number | Buffer,
-    result: string,
-    score: number
-}[]
-```
-**描述：** 基于字符频率分析找出最可能的 XOR 密钥。
-
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| input | string \| Buffer | 加密的输入 |
-| keyLength | number | 密钥长度 (默认 1) |
-
-**示例：**
-```javascript
-const encrypted = encode.XOR('Hello World', 0x42);
-const best = FrequencyAnalysis.bestXORKey(encrypted, 1);
-
-console.log('最佳密钥:', best[0].key);
-// 66 (0x42)
-console.log('解密结果:', best[0].result);
-// 'Hello World'
-console.log('评分:', best[0].score);
-// 0.95
+console.log(FrequencyAnalysis.EnglishFrequency['E']);
+// ~12.7 (%)
 ```
 
 ---
 
-## 字典生成器 (新增)
+## 字典生成器
 
-根据各种模式生成密码字典。
+根据各种模式生成密码字典。位于 `solver.Utils.DictionaryGenerator`。
 
-### 键盘模式生成
+### 键盘路径生成
 ```javascript
-DictionaryGenerator.keyboardPatterns(base: string, depth: number): string[]
+DictionaryGenerator.generateKeyboardPaths(layoutName?: string, length?: number, maxDistance?: number): string[]
 ```
 **参数：**
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| base | string | 基础字符串 (如 'qwerty') |
-| depth | number | 递归深度 |
+| layoutName | string | 键盘布局 ('qwerty' / 'azerty' / 'qwertz'，默认 'qwerty') |
+| length | number | 路径长度 (默认 3) |
+| maxDistance | number | 相邻按键最大距离 (默认 2) |
 
 **示例：**
 ```javascript
-DictionaryGenerator.keyboardPatterns('qwerty', 2);
-// ['qwerty', 'qwer', 'qwe', 'qw', 'q', 'erty', 'rty', 'ty', 'y', ...]
+const { solver } = require('ctf-utils');
+const DictionaryGenerator = solver.Utils.DictionaryGenerator;
 
-DictionaryGenerator.keyboardPatterns('asdf', 3);
-// 更多组合...
+DictionaryGenerator.generateKeyboardPaths('qwerty', 3);
+// ['QQQ', 'QQW', 'QQE', 'QQA', 'QQS', ...]
 ```
 
-### 日期模式生成
+### 日期格式生成
 ```javascript
-DictionaryGenerator.datePatterns(startYear: number, endYear: number, formats?: string[]): string[]
+DictionaryGenerator.generateDateFormats(startYear: number, endYear: number, formats?: string[]): string[]
 ```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| startYear | number | 起始年份 |
-| endYear | number | 结束年份 |
-| formats | string[] | 日期格式数组 (可选) |
-
-**默认格式：**
-- `yyyyMMdd`
-- `yyyy-MM-dd`
-- `yyyy/MM/dd`
-- `ddMMyyyy`
-- `MMddyyyy`
-- `yyyyMM`
-- `MMyyyy`
+**默认格式：** `YYYY-MM-DD`、`DD/MM/YYYY`、`MM/DD/YYYY`、`YYYYMMDD`、`DDMMYYYY`、`MMDDYYYY`
 
 **示例：**
 ```javascript
-DictionaryGenerator.datePatterns(2020, 2025);
-// ['20200101', '2020-01-01', '2020/01/01', '01012020', ...]
+DictionaryGenerator.generateDateFormats(2020, 2021);
+// ['2020-01-01', '01/01/2020', '01/01/2020', '20200101', ...]
 
-DictionaryGenerator.datePatterns(2000, 2005, ['yyyy', 'yy']);
-// ['2000', '2001', '2002', '2003', '2004', '2005', '00', '01', '02', '03', '04', '05']
-```
-
-### 组合字典
-```javascript
-DictionaryGenerator.combine(words1: string[], words2: string[], separator?: string): string[]
-```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| words1 | string[] | 第一组单词 |
-| words2 | string[] | 第二组单词 |
-| separator | string | 连接符 (默认 '') |
-
-**示例：**
-```javascript
-DictionaryGenerator.combine(['password', 'admin'], ['123', '!@#']);
-// ['password123', 'password!@#', 'admin123', 'admin!@#']
-
-DictionaryGenerator.combine(['password'], ['!', '@', '#'], '_');
-// ['password_!', 'password_@', 'password_#']
-```
-
-### 变形字典
-```javascript
-DictionaryGenerator.mutate(word: string, options?: {
-    leet?: boolean,
-    capitalize?: boolean,
-    append?: string[],
-    prepend?: string[]
-}): string[]
-```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| word | string | 基础单词 |
-| options | object | 变形选项 |
-| options.leet | boolean | 是否进行 1337 替换 (默认 true) |
-| options.capitalize | boolean | 是否首字母大写 (默认 true) |
-| options.append | string[] | 追加的后缀 |
-| options.prepend | string[] | 添加的前缀 |
-
-**示例：**
-```javascript
-DictionaryGenerator.mutate('password');
-// ['password', 'Password', 'p@ssword', 'P@ssword', ...]
-
-DictionaryGenerator.mutate('admin', { append: ['123', '!'], prepend: ['#', '@'] });
-// ['admin', 'Admin', 'admin123', 'admin!', '#admin', '#admin123', ...]
+DictionaryGenerator.generateDateFormats(2023, 2024, ['YYYY-MM-DD']);
 ```
 
 ### 完整字典生成
 ```javascript
-DictionaryGenerator.generate(options: {
-    baseWords?: string[],
-    years?: number[],
-    depth?: number,
-    leet?: boolean
+DictionaryGenerator.generateDictionary(options?: {
+    length?: number,
+    minLength?: number,
+    maxLength?: number,
+    charset?: string,
+    prefix?: string,
+    suffix?: string
 }): string[]
 ```
-**参数：**
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| baseWords | string[] | 基础单词列表 |
-| years | number[] | 年份范围 |
-| depth | number | 键盘模式深度 |
-| leet | boolean | 是否包含 1337 替换 |
+**示例：**
+```javascript
+DictionaryGenerator.generateDictionary({ length: 2, charset: 'ab' });
+// ['aa', 'ab', 'ba', 'bb']
+```
+
+### Leet Speak 变体
+```javascript
+DictionaryGenerator.generateLeetSpeak(words: string[]): string[]
+```
+**示例：**
+```javascript
+DictionaryGenerator.generateLeetSpeak(['password']);
+// ['p455w0r|)', 'p455w0ro|', ...]
+```
+
+### 常见密码变体
+```javascript
+DictionaryGenerator.generateCommonPasswords(baseWords?: string[]): string[]
+```
+**描述：** 为基础单词生成数字后缀/前缀和常见特殊字符变体。
 
 **示例：**
 ```javascript
-DictionaryGenerator.generate({
-    baseWords: ['password', 'admin'],
-    years: [2020, 2025],
-    depth: 1,
-    leet: true
-});
-// ['password', 'Password', 'p@ssword', '2020', 'password2020', ...]
+DictionaryGenerator.generateCommonPasswords(['admin']);
+// ['admin', 'admin1', '1admin', ..., 'admin123', 'admin!', ...]
+```
+
+### 保存字典
+```javascript
+DictionaryGenerator.saveDictionary(words: string[], filePath: string): void
+```
+**示例：**
+```javascript
+DictionaryGenerator.saveDictionary(['admin123', 'admin!'], './dict.txt');
 ```
 
 ---
-
 ## LSB 隐写提取 (新增)
 
 从图片中提取最低有效位隐写的数据。
@@ -1422,7 +1288,7 @@ decode.Base32(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Base32('JBSWY3DPEHPK3PXP');  // 'HelloWorld'
+decode.Base32('JBSWY3DPK5XXE3DE');  // 'HelloWorld'
 ```
 
 #### 4. Base16 解码
@@ -1440,7 +1306,7 @@ decode.Base58(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Base58('2gzeX');  // '123'
+decode.Base58('HXRC');  // '123'
 ```
 
 #### 6. Base62 解码
@@ -1449,7 +1315,7 @@ decode.Base62(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Base62('3E8');  // '123'
+decode.Base62('DWjr');  // '123'
 ```
 
 #### 7. Base85 解码
@@ -1458,7 +1324,7 @@ decode.Base85(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Base85('BOu!rDZ');  // 'Hello'
+decode.Base85('NM&qn0001Q');  // 'Hello'
 ```
 
 #### 8. Base91 解码
@@ -1467,7 +1333,7 @@ decode.Base91(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Base91('TWi~');  // 'Hello'
+decode.Base91('x;bD6#');  // 'Hello'
 ```
 
 #### 9. Binary (BinStr) 解码
@@ -1493,7 +1359,7 @@ decode.OCT(str: string): string
 **示例：**
 ```javascript
 decode.OCT('110 145 154 154 157');  // 'Hello'
-decode.OCT('110/145/154', '/');    // 'He' (部分解码)
+decode.OCT('110/145/154', '/');    // 'Hel'
 ```
 
 #### 11. Decimal 解码
@@ -1508,7 +1374,7 @@ decode.Decimal(str: string, separator?: string): string
 **示例：**
 ```javascript
 decode.Decimal('72 101 108 108 111');  // 'Hello'
-decode.Decimal('72,101,108', ',');     // 'He'
+decode.Decimal('72,101,108', ',');     // 'Hel'
 ```
 
 #### 12. Morse 解码
@@ -1532,8 +1398,8 @@ decode.Bacon(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Bacon('AAAA ABABA ABBAB');  // 'HEL'
-decode.Bacon('aaaaa aabab');       // 'HE'
+decode.Bacon('aabbbaabaaababb');  // 'HEL'
+decode.Bacon('aabbbaabaa');       // 'HE'
 ```
 
 #### 14. Caesar 解码
@@ -1554,7 +1420,7 @@ decode.Caesar(input: string | Buffer, type?: number | string): string | Buffer
 **示例：**
 ```javascript
 decode.Caesar('Khoor', 3);           // 'Hello'
-decode.Caesar('Khoor', 'Avocat');     // 'Aewwi' (移位10)
+decode.Caesar('Khoor', 3);     // 'Hello'
 decode.Caesar('uryyb', 'ROT13');      // 'hello'
 ```
 
@@ -1576,7 +1442,7 @@ decode.ROT(input: string | Buffer, type?: number): string | Buffer
 ```javascript
 decode.ROT('uryyb', 13);           // 'hello'
 decode.ROT('67890', 5);            // '12345'
-decode.ROT('%3C 7? 56:', 47);      // 'Hello'
+decode.ROT('w6==@', 47);      // 'Hello'
 ```
 
 #### 16. Atbash 解码
@@ -1585,7 +1451,7 @@ decode.Atbash(input: string): string
 ```
 **示例：**
 ```javascript
-decode.Atbash('SVOOL');  // 'Hello'
+decode.Atbash('SVOOL');  // 'HELLO'
 decode.Atbash('svool');  // 'hello'
 ```
 
@@ -1601,7 +1467,7 @@ decode.Vigenere(input: string | Buffer, key: string): string | Buffer
 **示例：**
 ```javascript
 decode.Vigenere('RIJVS', 'KEY');  // 'HELLO'
-decode.Vigenere('Ppq nj!', 'abc'); // 'Hello World!'
+decode.Vigenere('Hfnlp Yosnd!', 'abc'); // 'Hello World!'
 ```
 
 #### 18. Playfair 解码
@@ -1658,7 +1524,7 @@ decode.RailFence(input: string, rails: number): string
 
 **示例：**
 ```javascript
-decode.RailFence('Hooelllr', 3);  // 'Hello World'
+decode.RailFence('Horel ollWd', 3);  // 'Hello World'
 ```
 
 #### 20. URL 解码
@@ -1693,7 +1559,7 @@ decode.Exponential(str: string): string
 ```
 **示例：**
 ```javascript
-decode.Exponential('2 0123 123 0123');  // 解密结果
+decode.Exponential('2 0123 123 0123');  // 'DONO'
 ```
 
 #### 23. DangPu 解码
@@ -1702,7 +1568,7 @@ decode.DangPu(str: string): string
 ```
 **示例：**
 ```javascript
-decode.DangPu('由工王 由大工');  // 解密结果
+decode.DangPu('由工王 由大工');  // '146 154'
 ```
 
 #### 24. ZaHuoPu 解码
@@ -1711,7 +1577,7 @@ decode.ZaHuoPu(str: string): string
 ```
 **示例：**
 ```javascript
-decode.ZaHuoPu('兔子兔子乌龟兔子');  // 解密结果
+decode.ZaHuoPu('丁不勾示不小');  // '12'
 ```
 
 #### 25. Poem 解码
@@ -1735,7 +1601,7 @@ decode.DangPu(str: string): string
 
 **示例：**
 ```javascript
-decode.DangPu('由大工');  // '124'
+decode.DangPu('由大工');  // '154'
 decode.DangPu('王夫井');  // '678'
 ```
 
@@ -1759,8 +1625,8 @@ decode.ZaHuoPu(str: string): string
 
 **示例：**
 ```javascript
-decode.ZaHuoPu('由工王');  // '124'
-decode.ZaHuoPu('兔子兔子乌龟兔子');  // 数字字符串
+decode.ZaHuoPu('丁不勾');  // '1'
+decode.ZaHuoPu('示不小');  // '2'
 ```
 
 #### 28. YuFoLunChan 解码
@@ -1773,7 +1639,7 @@ decode.YuFoLunChan(str: string): string
 
 **示例：**
 ```javascript
-decode.YuFoLunChan('内容由加密');  // 解密后的明文
+decode.YuFoLunChan('佛曰：冥切他冥苦冥大怛冥滅冥輸冥尼亦冥吉遠冥上冥室冥遠冥遮究');  // 'hello'
 ```
 
 #### 29. ADFGVX 密码解码
@@ -1789,7 +1655,7 @@ decode.ADFGVX(str: string, key: string): string
 
 **示例：**
 ```javascript
-decode.ADVDFA('DGAVV', 'KEY');  // 解密结果
+decode.ADFGVX('DDGAXDFAGF', 'KEY');  // 'HELLO'
 ```
 
 #### 30. AES 密文解码
@@ -1833,21 +1699,19 @@ decode.HTML('&#60;div&#62;');    // '<div>'
 decode.HTML('&#x3C;div&#x3E;'); // '<div>'
 ```
 
-#### 33. JQ 表达式解码
+#### 33. JQ 解码
 ```javascript
-decode.JQ(json: string, query: string): any
+decode.JQ(text: string): string
 ```
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| json | string | JSON 字符串 |
-| query | string | JQ 查询表达式 |
+| text | string | JQ 引号编码文本 |
 
-**描述：** 使用 JQ 表达式解析 JSON 数据。
+**描述：** 解码 JQ（Jothello's Quotes）引号替换编码，每个引号序列映射回一个字符。
 
 **示例：**
 ```javascript
-decode.JQ('{"foo": "bar"}', '.foo');  // 'bar'
-decode.JQ('[1,2,3]', '.[]');          // [1, 2, 3]
+decode.JQ('"\'"\' ""i');  // 'Hi'
 ```
 
 #### 34. 五笔字型解码
@@ -1858,7 +1722,7 @@ decode.Wubi(str: string): string
 
 **示例：**
 ```javascript
-decode.Wubi('gggk');  // '木'
+decode.Wubi('wq vb');  // '你好'
 ```
 
 #### 35. 拼音解码
@@ -1869,8 +1733,8 @@ decode.Pinyin(str: string): string
 
 **示例：**
 ```javascript
-decode.Pinyin('ni3 hao3');  // '你好'
-decode.Pinyin('zhong1 guo2');  // '中国'
+decode.Pinyin('ni hao');  // '你好'
+decode.Pinyin('zhong guo');  // 'zhong 国' (映射表未覆盖的字原样保留)
 ```
 
 #### 36. 简单替换密码解码
@@ -1886,7 +1750,7 @@ decode.SimpleSub(str: string, key: string): string
 
 **示例：**
 ```javascript
-decode.SimpleSub('Khoor', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');  // 'Hello'
+decode.SimpleSub('ITSSG', 'QWERTYUIOPASDFGHJKLZXCVBNM');  // 'HELLO'
 ```
 
 ---
@@ -1921,7 +1785,7 @@ encode.Base32(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Base32('HelloWorld');  // 'JBSWY3DPEHPK3PXP'
+encode.Base32('HelloWorld');  // 'JBSWY3DPK5XXE3DE'
 ```
 
 #### 4. Base16 编码
@@ -1939,7 +1803,7 @@ encode.Base58(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Base58('123');  // '2gzeX'
+encode.Base58('123');  // 'HXRC'
 ```
 
 #### 6. Base62 编码
@@ -1948,7 +1812,7 @@ encode.Base62(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Base62('123');  // '3E8'
+encode.Base62('123');  // 'DWjr'
 ```
 
 #### 7. Base85 编码
@@ -1957,7 +1821,7 @@ encode.Base85(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Base85('Hello');  // 'BOu!rDZ'
+encode.Base85('Hello');  // 'NM&qn0001Q'
 ```
 
 #### 8. Base91 编码
@@ -1966,7 +1830,7 @@ encode.Base91(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Base91('Hello');  // 'TWi~'
+encode.Base91('Hello');  // 'x;bD6#'
 ```
 
 #### 9. Binary (BinStr) 编码
@@ -2025,7 +1889,7 @@ encode.Bacon(str: string): string
 ```
 **示例：**
 ```javascript
-encode.Bacon('HEL');  // 'AAAA ABABA ABBAB'
+encode.Bacon('HEL');  // 'aabbbaabaaababb'
 ```
 
 #### 14. Caesar 编码
@@ -2053,7 +1917,7 @@ encode.ROT(input: string | Buffer, type?: number): string | Buffer
 ```javascript
 encode.ROT('hello', 13);  // 'uryyb'
 encode.ROT('12345', 5);   // '67890'
-encode.ROT('Hello', 47);  // '%3C 7? 56:'
+encode.ROT('Hello', 47);  // 'w6==@'
 ```
 
 #### 16. Atbash 编码
@@ -2062,7 +1926,7 @@ encode.Atbash(input: string): string
 ```
 **示例：**
 ```javascript
-encode.Atbash('Hello');  // 'SVOOL'
+encode.Atbash('Hello');  // 'Svool'
 encode.Atbash('hello');  // 'svool'
 ```
 
@@ -2073,7 +1937,7 @@ encode.Vigenere(input: string | Buffer, key: string): string | Buffer
 **示例：**
 ```javascript
 encode.Vigenere('HELLO', 'KEY');    // 'RIJVS'
-encode.Vigenere('Hello World!', 'abc');  // 'Ppq nj!'
+encode.Vigenere('Hello World!', 'abc');  // 'Hfnlp Yosnd!'
 ```
 
 #### 18. Affine 编码
@@ -2092,7 +1956,7 @@ encode.RailFence(input: string, rails: number): string
 ```
 **示例：**
 ```javascript
-encode.RailFence('Hello World', 3);  // 'Hooelllr'
+encode.RailFence('Hello World', 3);  // 'Horel ollWd'
 ```
 
 #### 20. URL 编码
@@ -2118,8 +1982,8 @@ encode.Unicode(str: string, type?: number): string
 ```javascript
 encode.Unicode('Hello', 1);  // '\u0048\u0065\u006c\u006c\u006f'
 encode.Unicode('Hello', 2);  // '&#72;&#101;&#108;&#108;&#111;'
-encode.Unicode('Hello', 3);  // '&#x48;&#x65;&#x6c;&#x6c;&#x6f;'
-encode.Unicode('Hello');     // 默认 type=1
+encode.Unicode('Hello', 3);  // '&#x0048;&#x0065;&#x006c;&#x006c;&#x006f;'
+encode.Unicode('Hello');     // 原样返回（type 为必填参数）
 ```
 
 #### 22. MD5 编码
@@ -2139,8 +2003,8 @@ encode.DangPu(str: string): string
 
 **示例：**
 ```javascript
-encode.DangPu('124');  // '由大工'
-encode.DangPu('678');  // '大王井'
+encode.DangPu('124');  // '由中工'
+encode.DangPu('678');  // '王夫井'
 ```
 
 #### 24. Polybius 坐标编码
@@ -2208,7 +2072,7 @@ encode.ADFGVX(str: string, key: string): string
 
 **示例：**
 ```javascript
-encode.ADFGVX('HELLO', 'KEY');  // 'ADVDFA DGAVV'
+encode.ADFGVX('HELLO', 'KEY');  // 'DDGAXDFAGF'
 ```
 
 #### 28. AES 加密
@@ -2224,7 +2088,7 @@ encode.AES(str: string, password: string): string
 
 **示例：**
 ```javascript
-encode.AES('Hello', 'password');  // 'U2FsdGVkX1+...'
+encode.AES('Hello', 'password');  // '<iv_hex>:<ciphertext_hex>' (每次加密 IV 随机)
 ```
 
 #### 29. Brainfuck 代码生成
@@ -2247,24 +2111,23 @@ encode.HTML(str: string): string
 **示例：**
 ```javascript
 encode.HTML('<div>');     // '&lt;div&gt;'
-encode.HTML('<div>', 'decimal');    // '&#60;div&#62;'
-encode.HTML('<div>', 'hexadecimal'); // '&#x3C;div&#x3E;'
+encode.HTML('<div>', 'decimal');    // '&#60;&#100;&#105;&#118;&#62;'
+encode.HTML('<div>', 'hexadecimal'); // '&#x3C;&#x64;&#x69;&#x76;&#x3E;'
 ```
 
-#### 31. JQ 表达式编码
+#### 31. JQ 编码
 ```javascript
-encode.JQ(data: any, query: string): any
+encode.JQ(text: string): string
 ```
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| data | any | 要处理的数据 (对象或数组) |
-| query | string | JQ 查询表达式 |
+| text | string | 要编码的文本 |
 
-**描述：** 使用 JQ 表达式处理数据。
+**描述：** 将文本编码为 JQ（Jothello's Quotes）格式，每个字符映射为一段引号序列。
 
 **示例：**
 ```javascript
-encode.JQ({foo: 'bar'}, '.foo');  // 'bar'
+encode.JQ('Hi');  // '"\'"\' ""i'
 ```
 
 #### 32. 五笔字型编码
@@ -2275,7 +2138,7 @@ encode.Wubi(str: string): string
 
 **示例：**
 ```javascript
-encode.Wubi('木');  // 'ssss' 或 'gggk' (取决于具体实现)
+encode.Wubi('木');  // 'ssss'
 ```
 
 #### 33. 拼音编码
@@ -2286,7 +2149,7 @@ encode.Pinyin(str: string): string
 
 **示例：**
 ```javascript
-encode.Pinyin('你好');  // 'nǐ hǎo'
+encode.Pinyin('你好');  // 'ni hao'
 ```
 
 #### 34. 简单替换密码编码
@@ -2302,7 +2165,7 @@ encode.SimpleSub(str: string, key: string): string
 
 **示例：**
 ```javascript
-encode.SimpleSub('Hello', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');  // 'Khoor'
+encode.SimpleSub('Hello', 'QWERTYUIOPASDFGHJKLZXCVBNM');  // 'ITSSG'
 ```
 
 #### 26. XOR 爆破

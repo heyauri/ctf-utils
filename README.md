@@ -53,7 +53,7 @@ ctf-utils detect '636A56355279427363446C4A49454A71545342'
 ### Direct API
 
 ```javascript
-const { detect, decode, encode, CTFUtils } = require("ctf-utils");
+const { detect, decode, encode, decodeSync, encodeSync, CTFUtils } = require("ctf-utils");
 
 // Detect encoding type
 detect.Brainfuck("++[>+<-]");     // true
@@ -122,7 +122,7 @@ ctf-utils encode ADFGVX "HELLO" -k "KEY"
 
 # ADFGVX decode with key
 ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
-# Output: [ADFGVX] DDGAXDFAGF => HVALW
+# Output: [ADFGVX] DDGAXDFAGF => HELLO
 ```
 
 ## Supported Methods
@@ -133,7 +133,7 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |--------|--------|--------|--------|-------------|
 | Caesar | | ✅ | ✅ | Shift cipher with configurable shift |
 | ROT5/13/47 | | ✅ | ✅ | ROTation ciphers |
-| Vigenere | ✅ | ✅ | ✅ | Polyalphabetic substitution cipher |
+| Vigenere | | ✅ | ✅ | Polyalphabetic substitution cipher |
 | Playfair | ✅ | ✅ | ✅ | Polygraphic substitution cipher |
 | Affine | ✅ | ✅ | ✅ | Linear substitution cipher |
 | RailFence | ✅ | ✅ | ✅ | Transposition cipher |
@@ -177,10 +177,10 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |--------|--------|--------|--------|-------------|
 | Morse | ✅ | ✅ | ✅ | Morse code |
 | DangPu | ✅ | ✅ | ✅ | 当铺密码 (shop password) |
-| ZaHuoPu | ✅ | ✅ | ✅ | 座右铭密码 (motto cipher) |
-| Poem | ✅ | ✅ | ✅ | 藏头诗 (acrostic poem) |
-| YuFoLunChan | ✅ | ✅ | ✅ | 与佛论禅 (Buddhist cipher) |
-| Exponential | ✅ | ✅ | ✅ | Exponential cipher |
+| ZaHuoPu | ✅ | ✅ | | 座右铭密码 (motto cipher) |
+| Poem | ✅ | ✅ | | 藏头诗 (acrostic poem) |
+| YuFoLunChan | ✅ | ✅ | | 与佛论禅 (Buddhist cipher) |
+| Exponential | ✅ | ✅ | | Exponential cipher |
 
 ### Cryptographic Hash
 
@@ -402,9 +402,11 @@ const fileType = solver.Forensics.BinaryFile.detect(Buffer.from([0x89, 0x50, 0x4
 const pngInfo = solver.Forensics.PNGCheck.check("image.png");
 
 // Exploitation tools
-const ropChain = solver.Exploitation.ROP.generateChain([
-  { address: 0xdeadbeef, args: [0x1234, 0x5678] }
-]);
+const ropChain = solver.Exploitation.generateROPChain(
+  [{ address: "0xdeadbeef", description: "pop rdi; ret" }],
+  "0xdeadbeef",
+  ["0x1234", "0x5678"]
+);
 
 // Math utilities
 const gcd = solver.Math.gcd(12345n, 67890n);
@@ -412,9 +414,9 @@ const factors = solver.Math.pollardsRho(123456789n);
 
 // Hash attacks
 const hashType = solver.Crypto.Hash.analyzeHashType("d41d8cd98f00b204e9800998ecf8427e");
-const cracked = solver.Crypto.Hash.bruteForceHash("5f4dcc3b5aa765d61d8327deb882cf99", "md5", "abcdefghijklmnopqrstuvwxyz", 8);
+const cracked = solver.Crypto.Hash.bruteForceHash("5f4dcc3b5aa765d61d8327deb882cf99", "abcdefghijklmnopqrstuvwxyz", 8, "md5");
 const saltedHash = solver.Crypto.Hash.hashWithSalt("password", "salt", "md5");
-const hmac = solver.Crypto.Hash.generateHMAC("data", "key", "sha256");
+const hmac = solver.Crypto.Hash.generateHMAC("key", "data", "sha256");
 
 // Binary analysis
 const binaryType = solver.ReverseEngineering.BinaryAnalysis.detectBinaryType("binary.exe");

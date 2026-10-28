@@ -850,7 +850,17 @@ export const lowExponentCRT = (ciphertext: bigint, publicKey: RSAPublicKey): big
       }
     }
   }
-  
+
+  // Fallback: the message may exceed n^(1/e) (m^e wraps around n).
+  // For small moduli we can brute-force the e-th root modulo n.
+  if (n <= 10000000n) {
+    for (let x = 0n; x < n; x++) {
+      if (bigintCryptoUtils.modPow(x, e, n) === ciphertext) {
+        return x;
+      }
+    }
+  }
+
   return null;
 };
 

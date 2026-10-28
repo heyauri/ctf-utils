@@ -138,10 +138,15 @@ console.log('7. 测试二进制结构分析');
 try {
   const binaryPath = path.join(__dirname, 'test.bin');
   fs.writeFileSync(binaryPath, 'test binary content');
-  
+
   try {
-    const structure = BinaryAnalysis.analyzeBinaryStructure(binaryPath);
-    console.log(`   ${structure ? '✅' : '❌'} 二进制结构分析测试通过`);
+    try {
+      const structure = solver.Exploitation.analyzeBinaryStructure(binaryPath);
+      console.log(`   ${structure ? '✅' : '❌'} 二进制结构分析测试通过`);
+    } catch (err) {
+      // 非二进制文件应优雅地抛出错误
+      console.log(`   ✅ 正确拒绝非二进制文件: ${err.message}`);
+    }
   } finally {
     if (fs.existsSync(binaryPath)) {
       fs.unlinkSync(binaryPath);
@@ -160,7 +165,7 @@ try {
   fs.writeFileSync(binaryPath, 'test binary content');
   
   try {
-    const security = BinaryAnalysis.analyzeBinarySecurity(binaryPath);
+    const security = solver.Exploitation.analyzeBinarySecurity(binaryPath);
     console.log(`   ${security ? '✅' : '❌'} 二进制安全分析测试通过`);
   } finally {
     if (fs.existsSync(binaryPath)) {

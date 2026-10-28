@@ -64,9 +64,10 @@ const de_ADFGVX = (str: string, key: string): string => {
     
     let pos = 0;
     const columns: string[] = new Array(key.length).fill('');
-    
+
+    // Round-robin distribution makes the trailing `shortColumns` columns shorter
     for (const { index } of sortedKey) {
-        const len = index < shortColumns ? columnLength - 1 : columnLength;
+        const len = index >= key.length - shortColumns ? columnLength - 1 : columnLength;
         columns[index] = str.slice(pos, pos + len);
         pos += len;
     }

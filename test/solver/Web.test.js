@@ -93,18 +93,19 @@ try {
   
   // 测试验证JWT token
   const secret = 'secret';
-  const verifyResult = WebSecurity.verifyJWT(token, secret);
+  const validToken = WebSecurity.generateJWT({ username: 'test' }, secret);
+  const verifyResult = WebSecurity.verifyJWT(validToken, secret);
   console.log(`   ${verifyResult ? '✅' : '❌'} 验证JWT token测试通过`);
-  
+
   // 测试生成JWT token
   const payload = { username: 'test', role: 'user' };
   const generatedToken = WebSecurity.generateJWT(payload, secret);
   console.log(`   ${typeof generatedToken === 'string' && generatedToken.split('.').length === 3 ? '✅' : '❌'} 生成JWT token测试通过`);
-  
+
   // 测试分析CSRF token
   const csrfToken = 'csrf_token_123';
   const csrfAnalysis = WebSecurity.analyzeCSRFToken(csrfToken);
-  console.log(`   ${csrfAnalysis && typeof csrfAnalysis.strength === 'string' ? '✅' : '❌'} 分析CSRF token测试通过`);
+  console.log(`   ${csrfAnalysis && typeof csrfAnalysis.isValid === 'boolean' && Array.isArray(csrfAnalysis.issues) ? '✅' : '❌'} 分析CSRF token测试通过`);
   
   // 测试生成XSS payloads
   const xssType = 'stored';
@@ -117,12 +118,9 @@ try {
   console.log(`   ${Array.isArray(xssVulnerabilities) ? '✅' : '❌'} 检测XSS漏洞测试通过`);
   
   // 测试分析会话管理安全
-  const cookies = {
-    session: 'session_id_123',
-    user: 'test'
-  };
+  const cookies = 'session=session_id_123; user=test';
   const sessionAnalysis = WebSecurity.analyzeSessionManagement(cookies);
-  console.log(`   ${sessionAnalysis && Array.isArray(sessionAnalysis.issues) ? '✅' : '❌'} 分析会话管理安全测试通过`);
+  console.log(`   ${Array.isArray(sessionAnalysis) ? '✅' : '❌'} 分析会话管理安全测试通过`);
   
   // 测试检测SQL注入模式
   const input = "' OR 1=1 --";

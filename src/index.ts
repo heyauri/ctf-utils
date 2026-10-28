@@ -48,6 +48,36 @@ class CTFUtils {
     }
 
     /**
+     * Attach chainable accessors to the pending promise so documented
+     * patterns like `await x.encode.Base64().decode.Base64().val()` work.
+     */
+    private chainify(promise: Promise<this>): Promise<this> {
+        const p = promise as Promise<this> & Record<string, unknown>;
+
+        p.val = () => promise.then(r => r.currTarget);
+        p.reset = () => promise.then(r => r.reset());
+        p.slice = (start?: number, end?: number) => promise.then(r => r.slice(start, end));
+        p.replace = (searchValue: string | RegExp, replaceValue: string) => promise.then(r => r.replace(searchValue, replaceValue));
+
+        // Re-attach the encode/decode namespaces so the chain can continue
+        p.encode = Object.fromEntries(Object.entries(this.encode).map(([key, method]) => [
+            key,
+            (...inputArgs: unknown[]) => this.chainify(promise.then(r => method.apply(r, inputArgs)))
+        ]));
+        p.decode = Object.fromEntries(Object.entries(this.decode).map(([key, method]) => [
+            key,
+            (...inputArgs: unknown[]) => this.chainify(promise.then(r => method.apply(r, inputArgs)))
+        ]));
+        // detect methods terminate the chain and return their raw result
+        p.detect = Object.fromEntries(Object.entries(this.detect).map(([key, method]) => [
+            key,
+            (...inputArgs: unknown[]) => promise.then(r => (method as (...a: unknown[]) => Promise<unknown>).apply(r, inputArgs))
+        ]));
+
+        return p;
+    }
+
+    /**
      * Build method map for async methods
      * @param methods Method object
      * @returns Method map
@@ -59,14 +89,17 @@ class CTFUtils {
 
         for (const [key, method] of Object.entries(methods)) {
             if (typeof method === 'function') {
-                methodMap[key] = async (...inputArgs: unknown[]) => {
-                    const input = inputArgs.length 
-                        ? [this.currTarget, ...inputArgs] 
-                        : [this.currTarget, ...this.args];
-                    
-                    const result = await method(...(input as [string, ...unknown[]]));
-                    this.currTarget = typeof result === 'string' ? result : result.toString();
-                    return this;
+                methodMap[key] = (...inputArgs: unknown[]) => {
+                    const promise = (async () => {
+                        const input = inputArgs.length
+                            ? [this.currTarget, ...inputArgs]
+                            : [this.currTarget, ...this.args];
+
+                        const result = await method(...(input as [string, ...unknown[]]));
+                        this.currTarget = typeof result === 'string' ? result : result.toString();
+                        return this;
+                    })();
+                    return this.chainify(promise);
                 };
             }
         }

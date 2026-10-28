@@ -33,33 +33,39 @@ const ROT = (input: string | Buffer, rot: number = 13): string | Buffer => {
     }
 };
 
+const parseCaesarShift = (type: number | string): number | null => {
+    const t = Object.prototype.toString.call(type);
+    if (t === "[object Number]") {
+        return type as number;
+    }
+    if (t === "[object String]") {
+        switch (type) {
+            case "Avocat":
+                return 10;
+            case "ROT13":
+                return 13;
+            case "Cassis":
+                return -5;
+            case "Cassette":
+                return -6;
+            default:
+                return parseInt(type as string);
+        }
+    }
+    return null;
+};
+
 const en_Caesar = (input: string | Buffer, type: number | string = 13): string | Buffer => {
-    return ROT(input, type as number);
+    const rot = parseCaesarShift(type);
+    if (rot === null || isNaN(rot)) {
+        return "Caesar type is invalid";
+    }
+    return ROT(input, rot);
 };
 
 const de_Caesar = (input: string | Buffer, type: number | string = 13): string | Buffer => {
-    let rot: number;
-    const t = Object.prototype.toString.call(type);
-    if (t === "[object Number]") {
-        rot = type as number;
-    } else if (t === "[object String]") {
-        switch (type) {
-            case "Avocat":
-                rot = 10;
-                break;
-            case "ROT13":
-                rot = 13;
-                break;
-            case "Cassis":
-                rot = -5;
-                break;
-            case "Cassette":
-                rot = -6;
-                break;
-            default:
-                rot = parseInt(type as string);
-        }
-    } else {
+    const rot = parseCaesarShift(type);
+    if (rot === null || isNaN(rot)) {
         return "Caesar type is invalid";
     }
     return ROT(input, 26 - rot);

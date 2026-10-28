@@ -1,4 +1,4 @@
-const PNGCheck = require('../../lib/crypto-types/PNGCheck.js');
+const { PNGCheck } = require('../../lib/index.js').solver.Forensics;
 const fs = require('fs');
 const path = require('path');
 

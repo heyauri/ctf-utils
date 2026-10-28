@@ -112,9 +112,14 @@ const detectBinaryType = (binaryPath: string): { type: string; architecture: str
   }
   
   // Simple Mach-O detection
-  if (buffer.subarray(0, 4).toString('hex') === 'feedface' || 
-      buffer.subarray(0, 4).toString('hex') === 'feedfacf' ||
-      buffer.subarray(0, 4).toString('hex') === 'cafebabe') {
+  // Magic may appear as big-endian (feedface/feedfacf, fat binaries: cafebabe)
+  // or little-endian on disk (cefaedfe / cffaedfe)
+  const magic = buffer.subarray(0, 4).toString('hex');
+  if (magic === 'feedface' ||
+      magic === 'feedfacf' ||
+      magic === 'cefaedfe' ||
+      magic === 'cffaedfe' ||
+      magic === 'cafebabe') {
     return {
       type: 'Mach-O (macOS/iOS)',
       architecture: 'x86/x86-64/ARM'

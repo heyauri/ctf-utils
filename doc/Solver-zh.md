@@ -354,11 +354,11 @@ const { solver } = require("ctf-utils");
 
 // 频率分析
 const ciphertext = 'GUR DHVPX OEBJA QBT WHZCRQ BIRE GUR YNML SBK.';
-const analysis = solver.Analysis.FrequencyAnalysis.analyze(ciphertext);
+const analysis = solver.Analysis.FrequencyAnalysis.analyzeFrequency(ciphertext);
 console.log(analysis);
 
 // 英语字母频率比较
-const englishFreq = solver.Analysis.FrequencyAnalysis.englishFrequencies;
+const englishFreq = solver.Analysis.FrequencyAnalysis.EnglishFrequency;
 console.log(englishFreq);
 ```
 
@@ -381,7 +381,7 @@ const { solver } = require("ctf-utils");
 const charset = 'abcdefghijklmnopqrstuvwxyz';
 const minLength = 1;
 const maxLength = 3;
-const dictionary = solver.Utils.DictionaryGenerator.generate(charset, minLength, maxLength);
+const dictionary = solver.Utils.DictionaryGenerator.generateDictionary({ charset, minLength, maxLength });
 console.log(dictionary);
 
 // 二维码解析
@@ -474,28 +474,30 @@ console.log(videoStego);
 const { solver } = require("ctf-utils");
 
 // ROP 链生成
-const ropChain = solver.Exploitation.ROP.generateChain([
-  { address: 0xdeadbeef, args: [0x1234, 0x5678] },
-  { address: 0xcafebabe, args: [0x9abc] }
-]);
+const ropChain = solver.Exploitation.generateROPChain(
+  [
+    { address: "0xdeadbeef", description: "pop rdi; ret" },
+    { address: "0xcafebabe", description: "pop rsi; ret" }
+  ],
+  "0xdeadbeef",
+  ["0x1234", "0x5678"]
+);
 console.log(ropChain);
 
-// 缓冲区溢出偏移量计算
-const pattern = solver.Exploitation.BufferOverflow.generatePattern(200);
-// 用模式使程序崩溃后
-const offset = solver.Exploitation.BufferOverflow.findOffset("0x41424344");
-console.log("缓冲区溢出偏移量:", offset);
+// 缓冲区溢出 payload 生成
+const payload = solver.Exploitation.generateBufferOverflow(200, 112, "0xdeadbeef");
+console.log("缓冲区溢出 payload:", payload);
 
 // Shellcode 生成
-const shellcode = solver.Exploitation.Shellcode.generate("x86", "linux", "execve");
+const shellcode = solver.Exploitation.generateShellcode("execve", { arch: "x86", os: "linux" });
 console.log(shellcode);
 
 // 格式字符串漏洞分析
-const formatStringInfo = solver.Exploitation.FormatString.analyze("%x.%x.%x");
+const formatStringInfo = solver.Exploitation.analyzeFormatString("%x.%x.%x");
 console.log(formatStringInfo);
 
 // 二进制结构分析
-const binaryInfo = solver.Exploitation.BinaryFile.analyze("program");
+const binaryInfo = solver.Exploitation.analyzeBinaryStructure("program");
 console.log(binaryInfo);
 ```
 

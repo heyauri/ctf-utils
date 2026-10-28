@@ -5,10 +5,15 @@ const is_Binary = (str: string): boolean => {
 
 const de_Binary = (str: string, separator: string = ' '): string => {
     const cleaned = str.trim();
-    const hasSpace = cleaned.includes(' ');
-    const bins = hasSpace 
-        ? cleaned.split(/[\s]+/).filter(s => s.length > 0)
-        : cleaned.match(/.{1,8}/g) || [];
+    let bins: string[];
+    if (/[^01\s]/.test(cleaned)) {
+        // Non-binary separator characters present (e.g. "," or "/")
+        bins = cleaned.split(/[^01]+/).filter(s => s.length > 0);
+    } else if (cleaned.includes(' ')) {
+        bins = cleaned.split(/[\s]+/).filter(s => s.length > 0);
+    } else {
+        bins = cleaned.match(/.{1,8}/g) || [];
+    }
     let result = '';
     for (const bin of bins) {
         if (bin.length > 0) {

@@ -132,8 +132,8 @@ const decode = (text: string): string => {
  * Detect if text is in JQ format
  */
 const detect = (text: string): boolean => {
-    // JQ format consists mainly of quotes and spaces
-    return /^[ '"\\s]+$/.test(text) && 
+    // JQ format consists mainly of quotes, spaces and trailing identifier chars
+    return /^[ '"\w]+$/.test(text) &&
            text.split(' ').some(token => Object.keys(REVERSE_JQ_MAP).includes(token));
 };
 

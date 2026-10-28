@@ -16,6 +16,7 @@ import * as JQ from "./JQ";
 import * as MD5 from "./MD5";
 import * as Morse from "./Morse";
 import * as OCT from "./OCT";
+import * as Ook from "./Ook";
 import * as Pinyin from "./Pinyin";
 import * as Playfair from "./Playfair";
 import * as Poem from "./Poem";
@@ -57,6 +58,7 @@ export {
     MD5,
     Morse,
     OCT,
+    Ook,
     Pinyin,
     Playfair,
     Poem,

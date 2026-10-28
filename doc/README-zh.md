@@ -53,7 +53,7 @@ ctf-utils detect '636A56355279427363446C4A49454A71545342'
 ### 直接 API
 
 ```javascript
-const { detect, decode, encode, CTFUtils } = require("ctf-utils");
+const { detect, decode, encode, decodeSync, encodeSync, CTFUtils } = require("ctf-utils");
 
 // 检测编码类型
 detect.Brainfuck("++[>+<-]");     // true
@@ -122,7 +122,7 @@ ctf-utils encode ADFGVX "HELLO" -k "KEY"
 
 # 使用密钥的 ADFGVX 解码
 ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
-# 输出: [ADFGVX] DDGAXDFAGF => HVALW
+# 输出: [ADFGVX] DDGAXDFAGF => HELLO
 ```
 
 ## 支持的方法
@@ -133,7 +133,7 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |------|------|------|------|------|
 | Caesar | | ✅ | ✅ | 可配置移位的移位密码 |
 | ROT5/13/47 | | ✅ | ✅ | 旋转密码 |
-| Vigenere | ✅ | ✅ | ✅ | 多表替换密码 |
+| Vigenere | | ✅ | ✅ | 多表替换密码 |
 | Playfair | ✅ | ✅ | ✅ | 多字母替换密码 |
 | Affine | ✅ | ✅ | ✅ | 线性替换密码 |
 | RailFence | ✅ | ✅ | ✅ | 转置密码 |
@@ -177,10 +177,10 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |------|------|------|------|------|
 | Morse | ✅ | ✅ | ✅ | 摩尔斯电码 |
 | DangPu | ✅ | ✅ | ✅ | 当铺密码 |
-| ZaHuoPu | ✅ | ✅ | ✅ | 座右铭密码 |
-| Poem | ✅ | ✅ | ✅ | 藏头诗 |
-| YuFoLunChan | ✅ | ✅ | ✅ | 与佛论禅 |
-| Exponential | ✅ | ✅ | ✅ | 指数密码 |
+| ZaHuoPu | ✅ | ✅ | | 座右铭密码 |
+| Poem | ✅ | ✅ | | 藏头诗 |
+| YuFoLunChan | ✅ | ✅ | | 与佛论禅 |
+| Exponential | ✅ | ✅ | | 指数密码 |
 
 ### 密码哈希
 
@@ -231,9 +231,9 @@ console.log(strength); // { keySize: 512, strength: "Weak" }
 // 运行小指数攻击 (e=3)
 const n = 3233n; // 61 * 53
 const e = 3n;
-const ciphertext = 2790n;
+const ciphertext = 1000n; // 10^3 < n，未回绕
 const plaintext = solver.RSA.attacks.smallExponent(ciphertext, { n, e });
-console.log(plaintext); // 42n
+console.log(plaintext); // 10n
 
 // 运行 Coppersmith 攻击寻找小根
 const polynomial = (x) => x - 42n;
@@ -318,7 +318,8 @@ await new CTFUtils("HELLO", "KEY")
 ### 文件分析示例
 
 ```javascript
-const { BinaryFile, PNGCheck, ZIPInfo, LSBExtract } = require("ctf-utils");
+const { solver } = require("ctf-utils");
+const { BinaryFile, PNGCheck, ZIPInfo, LSBExtract } = solver.Forensics;
 const fs = require("fs");
 
 // 检测文件类型
@@ -331,42 +332,44 @@ const pngInfo = PNGCheck.check("image.png");
 console.log(pngInfo);
 
 // 分析 ZIP 伪加密
-const zipInfo = ZIPInfo.analyze("file.zip");
-console.log(zipInfo.hasPseudoEncryption);
+const zipInfo = ZIPInfo.analyzeZIP("file.zip");
+console.log(zipInfo.isPseudoEncrypted);
 
 // 提取 LSB 隐藏数据
-const hiddenData = LSBExtract.extract("stego.png", 3, "LSB");
+const hiddenData = LSBExtract.extractLSB("stego.png");
 console.log(hiddenData);
 ```
 
 ### 频率分析
 
 ```javascript
-const { FrequencyAnalysis } = require("ctf-utils");
+const { solver } = require("ctf-utils");
+const FrequencyAnalysis = solver.Analysis.FrequencyAnalysis;
 
 // 分析字符频率
-const result = FrequencyAnalysis.analyze("Hello World");
-console.log(result.letters['H']); // 'H' 的频率
-console.log(result.ic);           // 重合指数
+const result = FrequencyAnalysis.analyzeFrequency("Hello World");
+console.log(result.topChars[0]); // 最频繁的字符及频率
+console.log(result.chiSquared);  // 卡方统计量
 
-// 找到最佳 XOR 密钥
-const xorResults = FrequencyAnalysis.bestXORKey("encrypted data");
-console.log(xorResults[0]); // 最可能的密钥和结果
+// 与英语字母频率对比
+const compare = FrequencyAnalysis.compareWithEnglish("Hello World");
+console.log(compare);
 ```
 
 ### 字典生成
 
 ```javascript
-const { DictionaryGenerator } = require("ctf-utils");
+const { solver } = require("ctf-utils");
+const DictionaryGenerator = solver.Utils.DictionaryGenerator;
 
 // 生成键盘模式密码
-const patterns = DictionaryGenerator.keyboardPatterns("qwerty", 3);
+const patterns = DictionaryGenerator.generateKeyboardPaths("qwerty", 3);
 
 // 生成基于日期的密码
-const dates = DictionaryGenerator.datePatterns(2020, 2025);
+const dates = DictionaryGenerator.generateDateFormats(2020, 2025);
 
 // 生成组合字典
-const combos = DictionaryGenerator.combine(["password", "123"], ["!", "@"]);
+const combos = DictionaryGenerator.generateCommonPasswords(["password", "123"]);
 // ['password', '123', 'password!', 'password@', '123!', '123@']
 ```
 

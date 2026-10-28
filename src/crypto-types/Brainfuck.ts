@@ -53,6 +53,7 @@ const en_Brainfuck = (str: string): string => {
         } else if (diff < 0) {
             result += '-'.repeat(-diff);
         }
+        result += '.';
         result += '>';
         cells[i] = charCode;
     }
@@ -60,45 +61,42 @@ const en_Brainfuck = (str: string): string => {
 };
 
 const is_Ook = (str: string): boolean => {
-    const ookPattern = /Ook/i;
-    return ookPattern.test(str);
+    const ookPattern = /^(Ook[.!?]|\s)+$/i;
+    return ookPattern.test(str.trim());
+};
+
+// Standard Ook! <-> Brainfuck mapping (pairs of Ook tokens)
+const ookPairToBf: Record<string, string> = {
+    '!!': '>',
+    '??': '<',
+    '?.': '+',
+    '.?': '-',
+    '!.': '.',
+    '.!': ',',
+    '?!': '[',
+    '!?': ']'
+};
+
+const bfToOok = (bf: string): string => {
+    const ookPair: Record<string, [string, string]> = {
+        '>': ['!', '!'], '<': ['?', '?'], '+': ['?', '.'], '-': ['.', '?'],
+        '.': ['!', '.'], ',': ['.', '!'], '[': ['?', '!'], ']': ['!', '?']
+    };
+    const tokens: string[] = [];
+    for (const char of bf) {
+        const pair = ookPair[char];
+        if (!pair) continue;
+        tokens.push('Ook' + pair[0], 'Ook' + pair[1]);
+    }
+    return tokens.join(' ');
 };
 
 const ookToBrainfuck = (str: string): string => {
+    const tokens = str.match(/Ook[.!?]/gi) || [];
     let result = '';
-    const tokens = str.match(/Ook\.{1,3}|Ook\?{1,3}|Ook!{1,3}/gi) || [];
-    
-    for (const token of tokens) {
-        const upper = token.toLowerCase();
-        switch (upper) {
-            case 'ook.': result += '.'; break;
-            case 'ook..': result += ','; break;
-            case 'ook...': result += '['; break;
-            case 'ook!': result += ','; break;
-            case 'ook!!': result += '['; break;
-            case 'ook!!!': result += '['; break;
-            case 'ook?': result += ','; break;
-            case 'ook??': result += '['; break;
-            case 'ook???': result += '['; break;
-            case 'ook.ook': result += '>'; break;
-            case 'ook!ook': result += '>'; break;
-            case 'ook?ook': result += '>'; break;
-            case 'ook.ook!': result += '<'; break;
-            case 'ook!ook!': result += '<'; break;
-            case 'ook?ook?': result += '<'; break;
-            case 'ook.ook.': result += '+'; break;
-            case 'ook!ook!': result += '+'; break;
-            case 'ook?ook?': result += '+'; break;
-            case 'ook.ook?': result += '-'; break;
-            case 'ook!ook?': result += '-'; break;
-            case 'ook?ook!': result += '-'; break;
-            case 'ook.ook!': result += '['; break;
-            case 'ook!ook.': result += ']'; break;
-            case 'ook.ook?': result += ']'; break;
-            case 'ook!ook?': result += ']'; break;
-            case 'ook?ook!': result += '['; break;
-            case 'ook?ook.': result += ']'; break;
-        }
+    for (let i = 0; i + 1 < tokens.length; i += 2) {
+        const pair = tokens[i].slice(-1) + tokens[i + 1].slice(-1);
+        result += ookPairToBf[pair] || '';
     }
     return result;
 };
@@ -109,27 +107,7 @@ const de_Ook = (str: string): string => {
 };
 
 const en_Ook = (str: string): string => {
-    let bf = '';
-    for (let i = 0; i < str.length; i++) {
-        const charCode = str.charCodeAt(i);
-        bf += '+'.repeat(charCode);
-        bf += '.';
-    }
-    
-    let ook = '';
-    for (const char of bf) {
-        switch (char) {
-            case '.': ook += 'Ook. Ook.'; break;
-            case ',': ook += 'Ook! Ook!'; break;
-            case '[': ook += 'Ook? Ook.'; break;
-            case ']': ook += 'Ook. Ook?'; break;
-            case '+': ook += 'Ook. Ook!'; break;
-            case '-': ook += 'Ook! Ook.'; break;
-            case '>': ook += 'Ook! Ook?'; break;
-            case '<': ook += 'Ook? Ook!'; break;
-        }
-    }
-    return ook;
+    return bfToOok(en_Brainfuck(str));
 };
 
 export {

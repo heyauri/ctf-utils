@@ -20,6 +20,7 @@ const vigenere = (input: string | Buffer, key: string, decrypt: boolean = false)
         if (!normalizedKey) return input;
 
         const keyLen = normalizedKey.length;
+        let keyIndex = 0;
         const result = Buffer.alloc(input.length);
 
         for (let i = 0; i < input.length; i++) {
@@ -29,7 +30,8 @@ const vigenere = (input: string | Buffer, key: string, decrypt: boolean = false)
                 const charCode = input[i];
                 const base = isUpper ? 65 : 97;
                 const p = charCode - base;
-                const k = normalizedKey.charCodeAt(i % keyLen) - 65;
+                const k = normalizedKey.charCodeAt(keyIndex % keyLen) - 65;
+                keyIndex++;
                 let c: number;
                 if (decrypt) {
                     c = (p - k + 26) % 26;
