@@ -22,6 +22,26 @@ Solver 模块提供了用于解决 CTF 挑战的高级工具，包括密码学�
 
 密码学模块提供了全面的密码学挑战工具，包括 RSA 密码学、哈希攻击和格密码学攻击。
 
+### Magic 自动解码器
+
+Magic 模块会自动尝试所有无需密钥的解码器（支持递归），用于解开嵌套编码（如 hex -> base64 -> 明文）。
+
+```javascript
+const { solver } = require("ctf-utils");
+
+const results = solver.Magic.autoDecode('NjY2YzYxNjc3Yjc0NjU3Mzc0N2Q=');
+results.forEach(r => console.log(`[${r.path.join(' -> ')}] ${r.result}`));
+// [Base64 -> Base16] flag{test}
+// [Base64] 666c61677b746573747d
+// ...
+
+// 提供密钥时同时尝试需要密钥的密码（Vigenere、ADFGVX、Playfair 等）
+const keyed = solver.Magic.autoDecode('Rijvs uyvjn', { key: 'key' });
+
+// 列出输入可能是哪些编码
+const detected = solver.Magic.detectAll('48656c6c6f');
+```
+
 ### RSA 子模块
 
 RSA 子模块提供了用于 RSA 密码学挑战的工具，包括密钥生成、加密/解密和常见攻击。
@@ -385,9 +405,9 @@ const dictionary = solver.Utils.DictionaryGenerator.generateDictionary({ charset
 console.log(dictionary);
 
 // 二维码解析
-const qrResult = solver.Utils.QRCode.parse("image.png");
+const qrResult = solver.Utils.QRCode.QRCodeTool.parse("image.png");
 console.log(qrResult);
-const qrStego = solver.Utils.QRCode.detectStego("image.png");
+const qrStego = solver.Utils.QRCode.QRCodeTool.detectStego("image.png");
 console.log(qrStego);
 ```
 

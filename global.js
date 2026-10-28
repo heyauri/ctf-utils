@@ -115,6 +115,13 @@ async function startInteractiveMode() {
       } else {
         console.log(chalk.red('Usage: detect <text>'));
       }
+    } else if (input.startsWith('magic ')) {
+      const encoded = input.slice(6).trim();
+      if (encoded) {
+        await magicAction(encoded, {});
+      } else {
+        console.log(chalk.red('Usage: magic <encoded-string>'));
+      }
     } else if (input.startsWith('solve ')) {
       const [, problemType, ...problemArgs] = input.split(' ');
       if (problemType) {
@@ -352,26 +359,60 @@ async function solveCommand(problemType, args) {
     const subCommand = args[0];
     
     switch (problemType) {
-      case 'rsa':
+      case 'rsa': {
+        const RSA = solver.Crypto.RSA;
         if (subCommand === 'keygen') {
-          console.log(chalk.blue.bold('Generating RSA key pair...'));
-          // Generate RSA key pair
-          const { RSA } = solver.Crypto;
-          const keyPair = RSA.generateKeyPair();
+          const bits = parseInt(args[1], 10) || 2048;
+          console.log(chalk.blue.bold(`Generating ${bits}-bit RSA key pair...`));
+          const keyPair = await RSA.generateKeyPair(bits);
           console.log(chalk.green('Public key:'));
           console.log(chalk.yellow(`  n: ${keyPair.publicKey.n}`));
           console.log(chalk.yellow(`  e: ${keyPair.publicKey.e}`));
           console.log(chalk.green('Private key:'));
           console.log(chalk.yellow(`  d: ${keyPair.privateKey.d}`));
-          console.log(chalk.yellow(`  n: ${keyPair.privateKey.n}`));
+        } else if (subCommand === 'encrypt') {
+          const plaintext = args[1];
+          if (!plaintext) {
+            console.log(chalk.red('Usage: solve rsa encrypt <plaintext> [bits]'));
+            break;
+          }
+          const bits = parseInt(args[2], 10) || 1024;
+          console.log(chalk.blue.bold(`Encrypting with an ephemeral ${bits}-bit key pair...`));
+          const keyPair = await RSA.generateKeyPair(bits);
+          const ciphertext = RSA.RSASolver.encrypt(plaintext, keyPair.publicKey);
+          console.log(chalk.green('Public key (n, e):'));
+          console.log(chalk.yellow(`  n: ${keyPair.publicKey.n}`));
+          console.log(chalk.yellow(`  e: ${keyPair.publicKey.e}`));
+          console.log(chalk.green('Private key (d):'));
+          console.log(chalk.yellow(`  d: ${keyPair.privateKey.d}`));
+          console.log(chalk.green('Ciphertext:'));
+          console.log(chalk.yellow(`  ${ciphertext}`));
+        } else if (subCommand === 'eval') {
+          const n = args[1] ? BigInt(args[1]) : null;
+          if (n === null) {
+            console.log(chalk.red('Usage: solve rsa eval <modulus-n>'));
+            break;
+          }
+          console.log(chalk.green(JSON.stringify(RSA.evaluateKeyStrength(n))));
+        } else if (subCommand === 'attack') {
+          const attackType = args[1];
+          if (!attackType || !RSA.attacks[attackType]) {
+            console.log(chalk.red('Usage: solve rsa attack <attack-type> [args...]'));
+            console.log(chalk.yellow(`Available attacks: ${Object.keys(RSA.attacks).filter(k => k !== 'attacks').join(', ')}`));
+            break;
+          }
+          console.log(chalk.blue.bold(`Running ${attackType} attack...`));
+          const result = await RSA.attacks[attackType](...args.slice(2).map(a => /^-?\d+n?$/.test(a) ? BigInt(a.replace(/n$/, '')) : a));
+          console.log(chalk.green(`Result: ${typeof result === 'object' ? JSON.stringify(result, (_, v) => typeof v === 'bigint' ? v.toString() + 'n' : v, 2) : result}`));
         } else {
           console.log(chalk.blue.bold('RSA solver commands:'));
-          console.log(chalk.yellow('  solve rsa keygen - Generate RSA key pair'));
-          console.log(chalk.yellow('  solve rsa encrypt <plaintext> <public-key> - Encrypt with RSA'));
-          console.log(chalk.yellow('  solve rsa decrypt <ciphertext> <private-key> - Decrypt with RSA'));
-          console.log(chalk.yellow('  solve rsa attack <attack-type> [args...] - Run RSA attack'));
+          console.log(chalk.yellow('  solve rsa keygen [bits] - Generate RSA key pair (default 2048)'));
+          console.log(chalk.yellow('  solve rsa encrypt <plaintext> [bits] - Encrypt with an ephemeral key pair'));
+          console.log(chalk.yellow('  solve rsa eval <modulus-n> - Evaluate key strength'));
+          console.log(chalk.yellow('  solve rsa attack <attack-type> [args...] - Run an RSA attack'));
         }
         break;
+      }
       case 'math':
         if (subCommand === 'gcd' && args.length >= 3) {
           const a = BigInt(args[1]);
@@ -407,12 +448,49 @@ async function solveCommand(problemType, args) {
           console.log(chalk.yellow('  solve math factorize <n> - Factorize number'));
         }
         break;
-      case 'exploitation':
-        console.log(chalk.blue.bold('Exploitation solver commands:'));
-        console.log(chalk.yellow('  solve exploitation rop - Generate ROP chain'));
-        console.log(chalk.yellow('  solve exploitation shellcode - Generate shellcode'));
-        console.log(chalk.yellow('  solve exploitation bufferoverflow - Generate buffer overflow payload'));
+      case 'exploitation': {
+        const E = solver.Exploitation;
+        if (subCommand === 'shellcode') {
+          const type = args[1] || 'execve';
+          const arch = args[2] || 'x86';
+          const os = args[3] || 'linux';
+          try {
+            const shellcode = E.generateShellcode(type, { arch, os });
+            console.log(chalk.green(`[${arch}/${os}] ${type} shellcode:`));
+            console.log(chalk.yellow(`  ${shellcode}`));
+          } catch (err) {
+            console.log(chalk.red(`Error: ${err.message}`));
+            console.log(chalk.yellow('Supported types: bind_shell, reverse_shell, execve, read_file'));
+          }
+        } else if (subCommand === 'rop') {
+          const target = args[1];
+          if (!target) {
+            console.log(chalk.red('Usage: solve exploitation rop <target-address> [param1] [param2] ...'));
+            break;
+          }
+          const params = args.slice(2);
+          const chain = E.generateROPChain(
+            [{ address: target, description: 'pop rdi; ret' }],
+            target,
+            params
+          );
+          console.log(chalk.green(`ROP chain (${chain.length} elements):`));
+          chain.forEach((addr, i) => console.log(chalk.yellow(`  ${i}: ${addr}`)));
+        } else if (subCommand === 'bufferoverflow') {
+          const bufferSize = parseInt(args[1], 10) || 256;
+          const offset = parseInt(args[2], 10) || 112;
+          const overwriteValue = args[3] || '0xdeadbeef';
+          const payload = E.generateBufferOverflow(bufferSize, offset, overwriteValue);
+          console.log(chalk.green(`Payload (${payload.length} bytes):`));
+          console.log(chalk.yellow(`  ${payload.slice(0, 120)}${payload.length > 120 ? '...' : ''}`));
+        } else {
+          console.log(chalk.blue.bold('Exploitation solver commands:'));
+          console.log(chalk.yellow('  solve exploitation shellcode [type] [arch] [os] - Generate shellcode'));
+          console.log(chalk.yellow('  solve exploitation rop <target> [params...] - Generate ROP chain'));
+          console.log(chalk.yellow('  solve exploitation bufferoverflow [size] [offset] [value] - Generate overflow payload'));
+        }
         break;
+      }
       default:
         console.log(chalk.red(`Unknown problem type: ${problemType}`));
     }
@@ -1008,6 +1086,26 @@ async function detectAction(Input) {
 }
 
 /**
+ * Magic action - auto detect and decode unknown encodings
+ */
+async function magicAction(Input, options) {
+    const depth = parseInt(options.depth, 10) || 3;
+    try {
+        const results = solver.Magic.autoDecode(Input, { maxDepth: depth, key: options.key, maxResults: 15 });
+        if (results.length === 0) {
+            console.log(chalk.yellow('No decoding candidates found.'));
+            return;
+        }
+        console.log(chalk.blue.bold(`Found ${results.length} candidate(s):\n`));
+        for (const r of results) {
+            console.log(chalk.green(`[${r.path.join(' -> ')}]`) + ` ${JSON.stringify(r.result)}`);
+        }
+    } catch (err) {
+        console.error(chalk.red(`Error: ${err.message}`));
+    }
+}
+
+/**
  * Encode action
  */
 async function encodeAction(method, Input, options) {
@@ -1040,6 +1138,18 @@ async function decodeAction(method, Input, options) {
         console.error(chalk.yellow(`Available methods: ${Object.keys(decode).join(', ')}`));
         return;
     }
+    // Shift brute force: print all 26 shifts for ROT/Caesar
+    if (options.allShifts && (method === 'ROT' || method === 'Caesar')) {
+        for (let shift = 0; shift < 26; shift++) {
+            try {
+                const result = await decode[method](Input, shift);
+                console.log(chalk.cyan(`[${method}+${shift}]`) + ` ${result}`);
+            } catch {
+                // skip invalid shifts
+            }
+        }
+        return;
+    }
     try {
         let result;
         if (key) {
@@ -1056,7 +1166,11 @@ async function decodeAction(method, Input, options) {
 /**
  * Solve action
  */
-async function solveAction(problemType, ...args) {
+async function solveAction(problemType, ...commanderArgs) {
+    // Commander variadic: (problemType, args[], options, command)
+    const args = Array.isArray(commanderArgs[0]) && commanderArgs.length >= 3
+        ? commanderArgs[0]
+        : commanderArgs;
     await solveCommand(problemType, args);
 }
 
@@ -1066,6 +1180,13 @@ program
     .action(detectAction);
 
 program
+    .command("magic <Input>")
+    .description("Auto-detect and decode unknown encodings (supports nested encodings)")
+    .option("-d, --depth <n>", "maximum decoding depth", "3")
+    .option("-k, --key <key>", "key for keyed ciphers (Vigenere, ADFGVX, Playfair, ...)")
+    .action((Input, options) => magicAction(Input, options));
+
+program
     .command("encode <method> <Input>")
     .option("-k, --key <key>", "encryption key")
     .action((method, Input, options) => encodeAction(method, Input, options));
@@ -1073,6 +1194,7 @@ program
 program
     .command("decode <method> <Input>")
     .option("-k, --key <key>", "decryption key")
+    .option("-a, --all-shifts", "brute force all 26 shifts (ROT/Caesar only)")
     .action((method, Input, options) => decodeAction(method, Input, options));
 
 program

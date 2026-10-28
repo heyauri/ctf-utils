@@ -98,11 +98,17 @@ await new CTFUtils("HELLO")
 # 检测编码类型
 ctf-utils detect <输入>
 
+# Magic：自动识别并解码未知/嵌套编码
+ctf-utils magic <输入> [-d, --depth <n>] [-k, --key <密钥>]
+
 # 编码
 ctf-utils encode <方法> <输入> [-k, --key <密钥>]
 
 # 解码
 ctf-utils decode <方法> <输入> [-k, --key <密钥>]
+
+# 移位爆破（仅限 ROT/Caesar，输出全部 26 个移位）
+ctf-utils decode ROT <输入> -a, --all-shifts
 ```
 
 ### CLI 示例
@@ -177,10 +183,10 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |------|------|------|------|------|
 | Morse | ✅ | ✅ | ✅ | 摩尔斯电码 |
 | DangPu | ✅ | ✅ | ✅ | 当铺密码 |
-| ZaHuoPu | ✅ | ✅ | | 座右铭密码 |
+| ZaHuoPu | ✅ | ✅ | ✅ | 座右铭密码 |
 | Poem | ✅ | ✅ | | 藏头诗 |
-| YuFoLunChan | ✅ | ✅ | | 与佛论禅 |
-| Exponential | ✅ | ✅ | | 指数密码 |
+| YuFoLunChan | ✅ | ✅ | ✅ | 与佛论禅 |
+| Exponential | ✅ | ✅ | ✅ | 指数密码 |
 
 ### 密码哈希
 

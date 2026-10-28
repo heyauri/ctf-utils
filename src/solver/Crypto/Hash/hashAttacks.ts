@@ -59,6 +59,39 @@ const ripemd160 = (input: string): string => {
 };
 
 /**
+ * Enumerate candidate strings in breadth-first order
+ * ('', 'a', ..., 'z', 'aa', 'ab', ...) without queue overhead.
+ * @param charset Character set
+ * @param maxLength Maximum length to enumerate
+ * @param test Predicate to test each candidate
+ * @returns First candidate passing the test, or null
+ */
+const enumerateCandidates = (charset: string, maxLength: number, test: (candidate: string) => boolean): string | null => {
+  if (test('')) return '';
+  const chars = [...charset];
+  if (chars.length === 0) return null;
+
+  for (let len = 1; len <= maxLength; len++) {
+    const indices = new Array<number>(len).fill(0);
+    while (true) {
+      if (test(indices.map(i => chars[i]).join(''))) {
+        return indices.map(i => chars[i]).join('');
+      }
+      // Increment odometer
+      let pos = len - 1;
+      while (pos >= 0) {
+        indices[pos]++;
+        if (indices[pos] < chars.length) break;
+        indices[pos] = 0;
+        pos--;
+      }
+      if (pos < 0) break; // exhausted this length
+    }
+  }
+  return null;
+};
+
+/**
  * Brute force hash cracking
  * @param hash Target hash
  * @param charset Character set to use for brute force
@@ -67,30 +100,9 @@ const ripemd160 = (input: string): string => {
  * @returns Found plaintext or null if not found
  */
 const bruteForceHash = (hash: string, charset: string, maxLength: number, algorithm: string = 'md5'): string | null => {
-  // Use iterative approach instead of recursive for better performance
-  // This avoids stack overflow for large maxLength and is generally faster
-  
-  // Start with empty string
-  const queue = [''];
-  
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    
-    // Check current string
-    const currentHash = crypto.createHash(algorithm).update(current).digest('hex');
-    if (currentHash === hash) {
-      return current;
-    }
-    
-    // Generate next strings if we haven't reached max length
-    if (current.length < maxLength) {
-      for (const char of charset) {
-        queue.push(current + char);
-      }
-    }
-  }
-  
-  return null;
+  return enumerateCandidates(charset, maxLength, (candidate) => {
+    return crypto.createHash(algorithm).update(candidate).digest('hex') === hash;
+  });
 };
 
 /**
@@ -337,24 +349,9 @@ const hashWithSalt = (input: string, salt: string, algorithm: string = 'sha256')
  * @returns Found plaintext or null if not found
  */
 const bruteForceHashWithSalt = (hash: string, salt: string, charset: string, maxLength: number, algorithm: string = 'sha256'): string | null => {
-  const queue = [''];
-  
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const currentHash = crypto.createHash(algorithm).update(current + salt).digest('hex');
-    
-    if (currentHash === hash) {
-      return current;
-    }
-    
-    if (current.length < maxLength) {
-      for (const char of charset) {
-        queue.push(current + char);
-      }
-    }
-  }
-  
-  return null;
+  return enumerateCandidates(charset, maxLength, (candidate) => {
+    return crypto.createHash(algorithm).update(candidate + salt).digest('hex') === hash;
+  });
 };
 
 /**
@@ -408,24 +405,9 @@ const generateHMAC = (key: string, data: string, algorithm: string = 'sha256'): 
  * @returns Found key or null if not found
  */
 const crackHMAC = (hmac: string, data: string, charset: string, maxLength: number, algorithm: string = 'sha256'): string | null => {
-  const queue = [''];
-  
-  while (queue.length > 0) {
-    const currentKey = queue.shift()!;
-    const currentHMAC = crypto.createHmac(algorithm, currentKey).update(data).digest('hex');
-    
-    if (currentHMAC === hmac) {
-      return currentKey;
-    }
-    
-    if (currentKey.length < maxLength) {
-      for (const char of charset) {
-        queue.push(currentKey + char);
-      }
-    }
-  }
-  
-  return null;
+  return enumerateCandidates(charset, maxLength, (candidateKey) => {
+    return crypto.createHmac(algorithm, candidateKey).update(data).digest('hex') === hmac;
+  });
 };
 
 export {

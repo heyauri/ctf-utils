@@ -128,18 +128,14 @@ const extractHeader = (buf: Buffer, size: number = 256): {
 const searchPattern = (buf: Buffer, pattern: string | Buffer, offset: number = 0): number[] => {
     const patternBuffer = typeof pattern === 'string' ? Buffer.from(pattern, 'hex') : pattern;
     const offsets: number[] = [];
+    if (patternBuffer.length === 0) {
+        return offsets;
+    }
 
-    for (let i = offset; i <= buf.length - patternBuffer.length; i++) {
-        let match = true;
-        for (let j = 0; j < patternBuffer.length; j++) {
-            if (buf[i + j] !== patternBuffer[j]) {
-                match = false;
-                break;
-            }
-        }
-        if (match) {
-            offsets.push(i);
-        }
+    let idx = buf.indexOf(patternBuffer, offset);
+    while (idx !== -1) {
+        offsets.push(idx);
+        idx = buf.indexOf(patternBuffer, idx + 1);
     }
 
     return offsets;

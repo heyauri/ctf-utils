@@ -14,6 +14,7 @@
 
 import * as Crypto from "./Crypto";
 import * as Exploitation from "./Exploitation";
+import * as Magic from "./Magic";
 import * as Math from "./Math";
 import * as Forensics from "./Forensics";
 import * as Web from "./Web";
@@ -31,6 +32,7 @@ const RSA = Crypto.RSA;
 export {
   Crypto,
   RSA,
+  Magic,
   Exploitation,
   Math,
   Forensics,
@@ -47,6 +49,7 @@ export {
 export default {
   Crypto,
   RSA,
+  Magic,
   Exploitation,
   Math,
   Forensics,

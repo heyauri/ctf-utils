@@ -29,9 +29,21 @@ const de_ZaHuoPu = (str: string): string => {
     return str;
 };
 
+// Canonical digit -> phrase mapping used for encoding (dict1)
+const reverseDict: Record<string, string> = {
+    '0': '针不金', '1': '丁不勾', '2': '示不小', '3': '王不立', '4': '罪不非',
+    '5': '吾不口', '6': '交不叉', '7': '皂不白', '8': '分不刀', '9': '馗不首'
+};
+
+const en_ZaHuoPu = (str: string): string => {
+    return str.replace(/[0-9]/g, (d) => reverseDict[d]);
+};
+
 export {
     is_ZaHuoPu,
     de_ZaHuoPu,
+    en_ZaHuoPu,
     is_ZaHuoPu as detect,
-    de_ZaHuoPu as decode
+    de_ZaHuoPu as decode,
+    en_ZaHuoPu as encode
 };

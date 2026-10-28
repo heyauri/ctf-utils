@@ -31,12 +31,30 @@ const de_YuFoLunChan = (str: string): string => {
         i++;
     }
     const base64Str = buf.toString("base64");
-    const cryptor = CryptoJS.AES.decrypt(base64Str, KEY, { 
-        iv: IV, 
-        mode: CryptoJS.mode.CBC, 
-        padding: CryptoJS.pad.Pkcs7 
+    const cryptor = CryptoJS.AES.decrypt(base64Str, KEY, {
+        iv: IV,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
     });
     return cryptor.toString(CryptoJS.enc.Utf16LE);
+};
+
+const en_YuFoLunChan = (str: string): string => {
+    const cryptor = CryptoJS.AES.encrypt(CryptoJS.enc.Utf16LE.parse(str), KEY, {
+        iv: IV,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const buf = Buffer.from(cryptor.toString(), 'base64');
+    let out = '佛曰：';
+    for (const b of buf) {
+        if (b >= 128) {
+            out += BYTEMARK[0] + foYue[b - 128];
+        } else {
+            out += foYue[b];
+        }
+    }
+    return out;
 };
 
 const is_YuFoLunChan = (str: string): boolean => {
@@ -45,7 +63,9 @@ const is_YuFoLunChan = (str: string): boolean => {
 
 export {
     de_YuFoLunChan,
+    en_YuFoLunChan,
     is_YuFoLunChan,
     is_YuFoLunChan as detect,
-    de_YuFoLunChan as decode
+    de_YuFoLunChan as decode,
+    en_YuFoLunChan as encode
 };

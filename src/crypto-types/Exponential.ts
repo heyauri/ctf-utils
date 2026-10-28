@@ -36,12 +36,32 @@ const de_Exponential = (str: string): string => {
         }
         return out;
     }
-    return `${str}: Not Expected Format`;
+    throw new Error(`Exponential: input does not match a known format`);
+};
+
+const en_Exponential = (str: string): string => {
+    // Encode each letter as ascending power-of-two exponents (0-4), groups separated by spaces.
+    // E.g. 'C' (3 = 2^0 + 2^1) -> '01'
+    return str.toUpperCase()
+        .split('')
+        .filter(c => c >= 'A' && c <= 'Z')
+        .map(c => {
+            let value = c.charCodeAt(0) - 64;
+            const exponents: number[] = [];
+            for (let bit = 0; bit <= 4 && value > 0; bit++) {
+                if (value & 1) exponents.push(bit);
+                value >>= 1;
+            }
+            return exponents.join('');
+        })
+        .join(' ');
 };
 
 export {
     is_Exponential,
     de_Exponential,
+    en_Exponential,
     is_Exponential as detect,
-    de_Exponential as decode
+    de_Exponential as decode,
+    en_Exponential as encode
 };

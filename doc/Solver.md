@@ -22,6 +22,26 @@ The Solver module provides advanced tools for solving CTF challenges, including 
 
 The Crypto module provides comprehensive cryptographic challenge tools, including RSA cryptography, hash attacks, and lattice-based cryptography attacks.
 
+### Magic Auto-Decoder
+
+The Magic module automatically tries all keyless decoders (recursively) to uncover nested encodings such as hex -> base64 -> plaintext.
+
+```javascript
+const { solver } = require("ctf-utils");
+
+const results = solver.Magic.autoDecode('NjY2YzYxNjc3Yjc0NjU3Mzc0N2Q=');
+results.forEach(r => console.log(`[${r.path.join(' -> ')}] ${r.result}`));
+// [Base64 -> Base16] flag{test}
+// [Base64] 666c61677b746573747d
+// ...
+
+// With a key for keyed ciphers (Vigenere, ADFGVX, Playfair, ...)
+const keyed = solver.Magic.autoDecode('Rijvs uyvjn', { key: 'key' });
+
+// List which encodings the input could be
+const detected = solver.Magic.detectAll('48656c6c6f');
+```
+
 ### RSA Submodule
 
 The RSA submodule provides tools for RSA cryptography challenges, including key generation, encryption/decryption, and common attacks.
@@ -163,20 +183,16 @@ The Lattice submodule provides tools for lattice-based cryptographic attacks, in
 const { solver } = require("ctf-utils");
 
 // Use LLL algorithm to reduce lattice basis
-const basis = [
-  { elements: [1, 0, 0] },
-  { elements: [1, 2, 0] },
-  { elements: [1, 1, 1] }
-];
+const basis = solver.Crypto.Lattice.LatticeAttacks.generateLatticeBasis([[1, 0, 0], [1, 2, 0], [1, 1, 1]]);
 const result = solver.Crypto.Lattice.LatticeAttacks.lllAlgorithm(basis);
 console.log(result.reducedBasis, result.determinant);
 
 // Use Hastad broadcast attack
-const moduli = [n1, n2, n3]; // Multiple RSA moduli
-const ciphertexts = [c1, c2, c3]; // Corresponding ciphertexts
-const e = 3n; // Common exponent
-const plaintext = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(moduli, ciphertexts, e);
-console.log(plaintext);
+const plaintext = 100n; // Original message
+const moduli = [BigInt('0x7FFFFFFF'), BigInt('0x7FFFFF07'), BigInt('0x7FFFFEEF')]; // Multiple RSA moduli
+const ciphertexts = moduli.map(n => (plaintext ** 3n) % n); // Corresponding ciphertexts
+const recovered = solver.Crypto.Lattice.LatticeAttacks.hastadBroadcastAttack(moduli, ciphertexts, 3n);
+console.log(recovered); // 100n
 ```
 
 ### ECC Submodule
@@ -385,9 +401,9 @@ const dictionary = solver.Utils.DictionaryGenerator.generateDictionary({ charset
 console.log(dictionary);
 
 // QR code parsing
-const qrResult = solver.Utils.QRCode.parse("image.png");
+const qrResult = solver.Utils.QRCode.QRCodeTool.parse("image.png");
 console.log(qrResult);
-const qrStego = solver.Utils.QRCode.detectStego("image.png");
+const qrStego = solver.Utils.QRCode.QRCodeTool.detectStego("image.png");
 console.log(qrStego);
 ```
 

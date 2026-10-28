@@ -1562,6 +1562,18 @@ decode.Exponential(str: string): string
 decode.Exponential('2 0123 123 0123');  // 'DONO'
 ```
 
+#### Exponential 编码
+```javascript
+encode.Exponential(text: string): string
+```
+**描述：** 将字母编码为升序的 2 的幂指数序列（0-4），字母之间以空格分隔。
+
+**示例：**
+```javascript
+encode.Exponential('HELLO');  // '3 02 23 23 0123'
+decode.Exponential('3 02 23 23 0123');  // 'HELLO'
+```
+
 #### 23. DangPu 解码
 ```javascript
 decode.DangPu(str: string): string
@@ -1629,6 +1641,18 @@ decode.ZaHuoPu('丁不勾');  // '1'
 decode.ZaHuoPu('示不小');  // '2'
 ```
 
+#### ZaHuoPu 编码
+```javascript
+encode.ZaHuoPu(text: string): string
+```
+**描述：** 将数字替换为杂货铺字典中对应的汉字词组。
+
+**示例：**
+```javascript
+encode.ZaHuoPu('123');  // '丁不勾示不小王不立'
+decode.ZaHuoPu('丁不勾示不小王不立');  // '123'
+```
+
 #### 28. YuFoLunChan 解码
 ```javascript
 decode.YuFoLunChan(str: string): string
@@ -1640,6 +1664,18 @@ decode.YuFoLunChan(str: string): string
 **示例：**
 ```javascript
 decode.YuFoLunChan('佛曰：冥切他冥苦冥大怛冥滅冥輸冥尼亦冥吉遠冥上冥室冥遠冥遮究');  // 'hello'
+```
+
+#### YuFoLunChan 编码
+```javascript
+encode.YuFoLunChan(text: string): string
+```
+**描述：** 与解码互逆：明文经 AES-256-CBC 加密（内置固定密钥与 IV）后映射为佛语字符，输出以"佛曰："开头。
+
+**示例：**
+```javascript
+encode.YuFoLunChan('hello');  // '佛曰：冥切他冥苦冥大怛冥滅冥輸冥尼亦冥吉遠冥上冥室冥遠冥遮究'
+decode.YuFoLunChan(encode.YuFoLunChan('hello'));  // 'hello'
 ```
 
 #### 29. ADFGVX 密码解码

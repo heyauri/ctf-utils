@@ -30,9 +30,18 @@ for (const testDir of testDirs) {
             
             try {
                 console.log(`运行 ${testFile}...`);
-                execSync(`node "${testPath}"`, { encoding: 'utf8', stdio: 'pipe' });
-                console.log(`✅ ${testName} 测试通过\n`);
-                totalPassed++;
+                const output = execSync(`node "${testPath}"`, { encoding: 'utf8', stdio: 'pipe' });
+                // A test only passes if it exits 0 AND does not print internal failures (❌)
+                const internalFailures = (output.match(/❌/g) || []).length;
+                if (internalFailures > 0) {
+                    console.log(`❌ ${testName} 测试失败 (内部断言失败 ${internalFailures} 处)`);
+                    const failLines = output.split('\n').filter(l => l.includes('❌')).slice(0, 3);
+                    failLines.forEach(l => console.log(`   ${l.trim()}`));
+                    console.log('');
+                } else {
+                    console.log(`✅ ${testName} 测试通过\n`);
+                    totalPassed++;
+                }
             } catch (error) {
                 console.log(`❌ ${testName} 测试失败`);
                 console.log(`错误: ${error.message}\n`);
@@ -45,3 +54,4 @@ for (const testDir of testDirs) {
 console.log("==================================================");
 console.log(`测试完成: ${totalPassed}/${totalTests} 通过`);
 console.log("==================================================");
+process.exit(totalPassed === totalTests ? 0 : 1);

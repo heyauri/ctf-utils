@@ -5,6 +5,7 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 ## Features
 
 - **60+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
+- **Magic auto-decoder** - Automatically detect and decode unknown/nested encodings
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
@@ -98,16 +99,38 @@ await new CTFUtils("HELLO")
 # Detect encoding type
 ctf-utils detect <Input>
 
+# Magic: auto-detect and decode unknown/nested encodings
+ctf-utils magic <Input> [-d, --depth <n>] [-k, --key <key>]
+
 # Encode
 ctf-utils encode <method> <Input> [-k, --key <key>]
 
 # Decode
 ctf-utils decode <method> <Input> [-k, --key <key>]
+
+# Brute force all 26 shifts (ROT/Caesar only)
+ctf-utils decode ROT <Input> -a, --all-shifts
 ```
 
 ### CLI Examples
 
 ```bash
+# Magic: solve an unknown encoding automatically
+ctf-utils magic 'NjY2YzYxNjc3Yjc0NjU3Mzc0N2Q='
+# Output:
+# Found 12 candidate(s):
+# [Base64 -> Base16] "flag{test}"
+# [Base64] "666c61677b746573747d"
+# ...
+
+# Brute force all shifts
+ctf-utils decode ROT 'Uryyb' -a
+# Output:
+# [ROT+0] Uryyb
+# ...
+# [ROT+13] Hello
+# ...
+
 # Detect Brainfuck
 ctf-utils detect "++[>+<-]>"
 # Output: Brainfuck       Poem
@@ -177,10 +200,10 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 |--------|--------|--------|--------|-------------|
 | Morse | ✅ | ✅ | ✅ | Morse code |
 | DangPu | ✅ | ✅ | ✅ | 当铺密码 (shop password) |
-| ZaHuoPu | ✅ | ✅ | | 座右铭密码 (motto cipher) |
+| ZaHuoPu | ✅ | ✅ | ✅ | 座右铭密码 (motto cipher) |
 | Poem | ✅ | ✅ | | 藏头诗 (acrostic poem) |
-| YuFoLunChan | ✅ | ✅ | | 与佛论禅 (Buddhist cipher) |
-| Exponential | ✅ | ✅ | | Exponential cipher |
+| YuFoLunChan | ✅ | ✅ | ✅ | 与佛论禅 (Buddhist cipher) |
+| Exponential | ✅ | ✅ | ✅ | Exponential cipher |
 
 ### Cryptographic Hash
 
@@ -204,6 +227,26 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | BinaryAnalysis | | Binary file analysis and reverse engineering tools |
 
 ## Solver Modules
+
+### Magic Auto-Decoder
+
+Automatically tries all keyless decoders (recursively) to uncover nested encodings:
+
+```javascript
+const { solver } = require("ctf-utils");
+
+const results = solver.Magic.autoDecode('NjY2YzYxNjc3Yjc0NjU3Mzc0N2Q=');
+results.forEach(r => console.log(`[${r.path.join(' -> ')}] ${r.result}`));
+// [Base64 -> Base16] flag{test}
+// [Base64] 666c61677b746573747d
+// ...
+
+// With a key for keyed ciphers (Vigenere, ADFGVX, Playfair, ...)
+const keyed = solver.Magic.autoDecode('Rijvs uyvjn', { key: 'key' });
+
+// List which encodings the input could be
+const detected = solver.Magic.detectAll('48656c6c6f');
+```
 
 ### RSA Solver
 
