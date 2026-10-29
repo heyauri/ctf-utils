@@ -43,6 +43,9 @@ const KEYED_DECODERS: Array<{ name: string; transform?: (key: string) => unknown
     { name: 'ADFGVX' },
     { name: 'Playfair' },
     { name: 'SimpleSub' },
+    { name: 'Beaufort' },
+    { name: 'Autokey' },
+    { name: 'Hill' },
     { name: 'RailFence', transform: (key) => parseInt(key, 10) },
     { name: 'ROT', transform: (key) => parseInt(key, 10) },
     { name: 'Caesar', transform: (key) => parseInt(key, 10) }

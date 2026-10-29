@@ -2334,3 +2334,28 @@ console.log(`还原: ${back1}`);
 5. **Buffer 支持**：部分函数支持 Buffer 类型的输入输出
 
 
+
+
+---
+
+## 新增经典密码
+
+### Hill 密码
+```javascript
+encode.Hill('HELP', 'DDCF');   // 'HIAT' (经典向量, 2x2)
+encode.Hill('ACT', 'GYBNQKURP'); // 'POH' (经典向量, 3x3)
+decode.Hill('HIAT', 'DDCF');   // 'HELP'
+```
+**密钥：** n*n 个字母（2x2 用 4 个，3x3 用 9 个），行主序。
+
+### Beaufort 密码
+```javascript
+encode.Beaufort('HELLO', 'KEY'); // 'DANZQ'
+decode.Beaufort('DANZQ', 'KEY'); // 'HELLO' (互逆：加解密同一运算)
+```
+
+### Autokey 密码
+```javascript
+encode.Autokey('HELLO', 'KEY'); // 'RIJSS' (密钥流 = 密钥 + 明文)
+decode.Autokey('RIJSS', 'KEY'); // 'HELLO'
+```

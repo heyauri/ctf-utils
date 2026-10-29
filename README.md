@@ -6,6 +6,7 @@ A Node.js based CTF toolkit for detecting, decoding, and encoding messages using
 
 - **60+ encoding/crypto methods** - Comprehensive support for classical ciphers, modern encodings, and steganography tools
 - **Magic auto-decoder** - Automatically detect and decode unknown/nested encodings
+- **Classical cipher crackers** - Auto-solve Caesar, Vigenere and XOR with frequency analysis
 - **TypeScript support** - Full type definitions included
 - **Dual async/sync API** - Choose between async (Promise) or sync methods
 - **CTFUtils class** - Chainable API for encoding/decoding operations
@@ -110,6 +111,14 @@ ctf-utils decode <method> <Input> [-k, --key <key>]
 
 # Brute force all 26 shifts (ROT/Caesar only)
 ctf-utils decode ROT <Input> -a, --all-shifts
+
+# Auto-crack classical ciphers
+ctf-utils solve crack caesar <text>
+ctf-utils solve crack vigenere <text>
+ctf-utils solve crack xor <hex> [keyLength]
+
+# Magic on a file (detect type + decode embedded strings)
+ctf-utils magic -f <path> [--json]
 ```
 
 ### CLI Examples
@@ -155,6 +164,9 @@ ctf-utils decode ADFGVX "DDGAXDFAGF" -k "KEY"
 | Cipher | Detect | Decode | Encode | Description |
 |--------|--------|--------|--------|-------------|
 | Caesar | | ✅ | ✅ | Shift cipher with configurable shift |
+| Hill | | ✅ | ✅ | Matrix-based block cipher (2x2 / 3x3 key) |
+| Beaufort | | ✅ | ✅ | Reciprocal polyalphabetic cipher (key - plain) |
+| Autokey | | ✅ | ✅ | Vigenere variant, keystream = key + plaintext |
 | ROT5/13/47 | | ✅ | ✅ | ROTation ciphers |
 | Vigenere | | ✅ | ✅ | Polyalphabetic substitution cipher |
 | Playfair | ✅ | ✅ | ✅ | Polygraphic substitution cipher |
@@ -246,6 +258,31 @@ const keyed = solver.Magic.autoDecode('Rijvs uyvjn', { key: 'key' });
 
 // List which encodings the input could be
 const detected = solver.Magic.detectAll('48656c6c6f');
+```
+
+### Classical Cipher Cracker
+
+Frequency-analysis based automatic cracking, located at `solver.Analysis.Cracker`:
+
+```javascript
+const { solver } = require("ctf-utils");
+const C = solver.Analysis.Cracker;
+
+// Caesar: all 26 shifts ranked by English letter frequency
+const caesar = C.caesarBrute('KHOORZLOOVDLGWKHJXQVZLOOEHDWWKHZLQG');
+console.log(caesar[0]); // { shift: 3, decrypted: 'HELLOWILLSAIDTHEGUNSWILLBEATTHEWIND', score: ... }
+
+// Vigenere: automatic key length + key recovery (needs ~90+ letters)
+const vig = C.vigenereCrack('YVVXEIEQBWCERXLSHYRMUEOFGFZGXEDDYVVFVRSFIDIXGEJWYVVVRRFGSGWHIXZWGOKMCISZJOUPVAADQRVYVRVLMSTTJXDWBWKAFYJDNJVL');
+console.log(vig.key); // 'FORTRESS'
+
+// XOR: best single/multi-byte keys
+const xor = C.bestXORKey([10, 39, 46, 46, 45, 98, 21, 45, 48, 46], 1);
+console.log(xor[0]); // { key: [66], result: 'Hello Worl', ... }
+
+// Readability heuristic
+console.log(C.isReadable('The quick brown fox jumps over the lazy dog')); // true
+console.log(C.isReadable('Xyzw qnop rstu jklm hgfe')); // false
 ```
 
 ### RSA Solver

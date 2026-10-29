@@ -107,6 +107,14 @@ ctf-utils encode <方法> <输入> [-k, --key <密钥>]
 # 解码
 ctf-utils decode <方法> <输入> [-k, --key <密钥>]
 
+# 自动破解经典密码
+ctf-utils solve crack caesar <文本>
+ctf-utils solve crack vigenere <文本>
+ctf-utils solve crack xor <十六进制> [密钥长度]
+
+# Magic 分析文件（识别类型 + 解码内嵌字符串）
+ctf-utils magic -f <路径> [--json]
+
 # 移位爆破（仅限 ROT/Caesar，输出全部 26 个移位）
 ctf-utils decode ROT <输入> -a, --all-shifts
 ```

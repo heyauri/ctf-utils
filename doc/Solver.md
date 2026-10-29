@@ -378,6 +378,23 @@ const englishFreq = solver.Analysis.FrequencyAnalysis.EnglishFrequency;
 console.log(englishFreq);
 ```
 
+### Cracker Module
+
+Frequency-analysis based automatic cracking for classical ciphers:
+
+```javascript
+const caesar = solver.Analysis.Cracker.caesarBrute('KHOORZLOOVDLGWKHJXQVZLOOEHDWWKHZLQG');
+console.log(caesar[0].shift, caesar[0].decrypted); // 3 'HELLOWILLSAIDTHEGUNSWILLBEATTHEWIND'
+
+const vig = solver.Analysis.Cracker.vigenereCrack('YVVXEIEQBWCERXLSHYRMUEOFGFZGXEDDYVVFVRSFIDIXGEJWYVVVRRFGSGWHIXZWGOKMCISZJOUPVAADQRVYVRVLMSTTJXDWBWKAFYJDNJVL');
+console.log(vig.key); // 'FORTRESS'
+
+const xor = solver.Analysis.Cracker.bestXORKey([10, 39, 46, 46, 45, 98, 21, 45, 48, 46], 1);
+console.log(xor[0]); // { key: [66], result: 'Hello Worl', ... }
+
+console.log(solver.Analysis.Cracker.isReadable('The quick brown fox jumps over the lazy dog')); // true
+```
+
 ## Utils Module
 
 The Utils module provides utility functions for CTF challenges, including dictionary generation and QR code tools.

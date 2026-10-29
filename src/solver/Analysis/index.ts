@@ -1,3 +1,4 @@
 import * as FrequencyAnalysis from "./FrequencyAnalysis";
+import * as Cracker from "./Cracker";
 
-export { FrequencyAnalysis };
+export { FrequencyAnalysis, Cracker };

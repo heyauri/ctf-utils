@@ -413,6 +413,46 @@ async function solveCommand(problemType, args) {
         }
         break;
       }
+      case 'crack': {
+        const C = solver.Analysis.Cracker;
+        const type = subCommand;
+        const input = args[1];
+        if (!input) {
+          console.log(chalk.blue.bold('Crack solver commands:'));
+          console.log(chalk.yellow("  solve crack caesar <text> - Brute force all 26 Caesar shifts"));
+          console.log(chalk.yellow('  solve crack vigenere <text> - Auto-crack Vigenere (IC + n-gram hill climb)'));
+          console.log(chalk.yellow('  solve crack xor <hex-or-text> [keyLength] - Score best XOR keys'));
+          break;
+        }
+        if (type === 'caesar') {
+          const results = C.caesarBrute(input).slice(0, 8);
+          console.log(chalk.blue.bold('Top Caesar candidates:\n'));
+          for (const r of results) {
+            console.log(chalk.cyan(`[shift ${String(r.shift).padStart(2)}]`) + ` (chi² ${r.score}) ${r.decrypted}`);
+          }
+        } else if (type === 'vigenere') {
+          const result = C.vigenereCrack(input);
+          if (!result) {
+            console.log(chalk.yellow('Text too short to crack (need at least 8 letters).'));
+            break;
+          }
+          console.log(chalk.green(`Key: ${result.key} (length ${result.keyLength})`));
+          console.log(chalk.green(`Decrypted: ${result.decrypted}`));
+        } else if (type === 'xor') {
+          const keyLength = parseInt(args[2], 10) || 1;
+          const bytes = /^[0-9a-fA-F]+$/.test(input) && input.length % 2 === 0
+            ? [...Buffer.from(input, 'hex')]
+            : [...Buffer.from(input, 'binary')];
+          const results = C.bestXORKey(bytes, keyLength, 8);
+          console.log(chalk.blue.bold(`Top XOR candidates (key length ${keyLength}):\n`));
+          for (const r of results) {
+            console.log(chalk.cyan(`[key ${r.key.map(k => '0x' + k.toString(16).padStart(2, '0')).join(' ')}]`) + ` (score ${r.score}) ${JSON.stringify(r.result)}`);
+          }
+        } else {
+          console.log(chalk.red(`Unknown crack type: ${type} (use caesar | vigenere | xor)`));
+        }
+        break;
+      }
       case 'math':
         if (subCommand === 'gcd' && args.length >= 3) {
           const a = BigInt(args[1]);
@@ -1090,8 +1130,49 @@ async function detectAction(Input) {
  */
 async function magicAction(Input, options) {
     const depth = parseInt(options.depth, 10) || 3;
+    const runMagic = (text) => solver.Magic.autoDecode(text, { maxDepth: depth, key: options.key, maxResults: 15 });
+
     try {
-        const results = solver.Magic.autoDecode(Input, { maxDepth: depth, key: options.key, maxResults: 15 });
+        // File mode: detect type, extract strings, decode candidates
+        if (options.file) {
+            const fs = require('fs');
+            const data = fs.readFileSync(options.file);
+            const fileTypes = solver.Forensics.BinaryFile.detect(data);
+            const strings = solver.Forensics.BinaryFile.extractStrings(data, 8).slice(0, 80);
+            const findings = [];
+            for (const str of strings) {
+                for (const r of runMagic(str)) {
+                    if (r.result.length >= 4 && /[a-zA-Z]{3}/.test(r.result)) {
+                        findings.push({ from: str.slice(0, 60), path: r.path.join(' -> '), result: r.result, score: r.score });
+                    }
+                }
+            }
+            findings.sort((a, b) => b.score - a.score);
+            const payload = { file: options.file, detectedTypes: fileTypes, candidates: findings.slice(0, 20) };
+            if (options.json) {
+                console.log(JSON.stringify(payload, null, 2));
+                return;
+            }
+            console.log(chalk.blue.bold(`File: ${options.file}`));
+            if (fileTypes.length) {
+                console.log(chalk.cyan(`Detected type: ${fileTypes.join(', ')}`));
+            }
+            if (payload.candidates.length === 0) {
+                console.log(chalk.yellow('No decoding candidates found in file strings.'));
+                return;
+            }
+            console.log(chalk.blue.bold(`Found ${payload.candidates.length} candidate(s):\n`));
+            for (const f of payload.candidates) {
+                console.log(chalk.green(`[${f.path}]`) + ` ${JSON.stringify(f.result)} ` + chalk.gray(`(from "${f.from}...")`));
+            }
+            return;
+        }
+
+        const results = runMagic(Input);
+        if (options.json) {
+            console.log(JSON.stringify(results, null, 2));
+            return;
+        }
         if (results.length === 0) {
             console.log(chalk.yellow('No decoding candidates found.'));
             return;
@@ -1180,11 +1261,13 @@ program
     .action(detectAction);
 
 program
-    .command("magic <Input>")
+    .command("magic [Input]")
     .description("Auto-detect and decode unknown encodings (supports nested encodings)")
+    .option("-f, --file <path>", "analyze a file: detect type, extract strings, decode candidates")
     .option("-d, --depth <n>", "maximum decoding depth", "3")
     .option("-k, --key <key>", "key for keyed ciphers (Vigenere, ADFGVX, Playfair, ...)")
-    .action((Input, options) => magicAction(Input, options));
+    .option("--json", "output results as JSON")
+    .action((Input, options) => magicAction(Input || '', options));
 
 program
     .command("encode <method> <Input>")

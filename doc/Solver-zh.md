@@ -382,6 +382,23 @@ const englishFreq = solver.Analysis.FrequencyAnalysis.EnglishFrequency;
 console.log(englishFreq);
 ```
 
+### Cracker 模块
+
+基于频率分析的经典密码自动破解：
+
+```javascript
+const caesar = solver.Analysis.Cracker.caesarBrute('KHOORZLOOVDLGWKHJXQVZLOOEHDWWKHZLQG');
+console.log(caesar[0].shift, caesar[0].decrypted); // 3 'HELLOWILLSAIDTHEGUNSWILLBEATTHEWIND'
+
+const vig = solver.Analysis.Cracker.vigenereCrack('YVVXEIEQBWCERXLSHYRMUEOFGFZGXEDDYVVFVRSFIDIXGEJWYVVVRRFGSGWHIXZWGOKMCISZJOUPVAADQRVYVRVLMSTTJXDWBWKAFYJDNJVL');
+console.log(vig.key); // 'FORTRESS'
+
+const xor = solver.Analysis.Cracker.bestXORKey([10, 39, 46, 46, 45, 98, 21, 45, 48, 46], 1);
+console.log(xor[0]); // { key: [66], result: 'Hello Worl', ... }
+
+console.log(solver.Analysis.Cracker.isReadable('The quick brown fox jumps over the lazy dog')); // true
+```
+
 ## 工具模块
 
 工具模块提供了用于 CTF 挑战的实用函数，包括字典生成和二维码工具。

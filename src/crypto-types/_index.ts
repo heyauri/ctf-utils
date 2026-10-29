@@ -1,7 +1,9 @@
 import * as Affine from "./Affine";
 import * as ADFGVX from "./ADFGVX";
 import * as Atbash from "./Atbash";
+import * as Autokey from "./Autokey";
 import * as Bacon from "./Bacon";
+import * as Beaufort from "./Beaufort";
 import { Base16, Base32, Base58, Base62, Base64, Base85, Base91 } from "./Base/index";
 import * as BinStr from "./BinStr";
 import * as Brainfuck from "./Brainfuck";
@@ -30,6 +32,7 @@ import * as Vigenere from "./Vigenere";
 import * as Wubi from "./Wubi";
 import * as XOR from "./XOR";
 import * as AES from "./AES";
+import * as Hill from "./Hill";
 import * as YuFoLunChan from "./YuFoLunChan";
 import * as ZaHuoPu from "./ZaHuoPu";
 
@@ -37,6 +40,7 @@ export {
     ADFGVX,
     Affine,
     Atbash,
+    Autokey,
     Bacon,
     Base16,
     Base32,
@@ -45,6 +49,7 @@ export {
     Base64,
     Base85,
     Base91,
+    Beaufort,
     BinStr,
     Brainfuck,
     Caesar,
@@ -53,6 +58,7 @@ export {
     Exponential,
     HEX,
     Hash,
+    Hill,
     HTML,
     JQ,
     MD5,

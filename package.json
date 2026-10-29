@@ -1,6 +1,6 @@
 {
   "name": "ctf-utils",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A powerful CTF toolkit for encoding, decoding, encryption, decryption, and steganography analysis with 60+ methods",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
